@@ -1,0 +1,217 @@
+@model OxuMen.ViewModels.AssessmentPageViewModel
+
+@{
+    ViewData["Title"] = "Add Reading Assessment";
+}
+
+<h1>Add Reading Assessment</h1>
+
+<p class="text-muted">
+    Student: @Model.Student.FirstName @Model.Student.LastName
+</p>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form asp-controller="AssessmentPages"
+              asp-action="Create"
+              asp-route-studentId="@Model.Student.Id"
+              method="post">
+
+            <input asp-for="Input.StudentId" type="hidden" />
+
+            <div asp-validation-summary="All"
+                 class="text-danger"
+                 role="alert">
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Kind" class="form-label">
+                    Assessment Type
+                </label>
+
+                <select asp-for="Input.Kind"
+                        asp-items="Html.GetEnumSelectList<OxuMen.Models.AssessmentKind>()"
+                        class="form-select">
+                </select>
+
+                <span asp-validation-for="Input.Kind"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="Input.TextReference" class="form-label">
+                        Text Reference
+                    </label>
+
+                    <input asp-for="Input.TextReference"
+                           class="form-control"
+                           placeholder="For example, reading-text-001"
+                           maxlength="100"
+                           required />
+
+                    <span asp-validation-for="Input.TextReference"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Input.TextVersion" class="form-label">
+                        Text Version
+                    </label>
+
+                    <input asp-for="Input.TextVersion"
+                           class="form-control"
+                           placeholder="For example, 1"
+                           maxlength="30"
+                           required />
+
+                    <span asp-validation-for="Input.TextVersion"
+                          class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.AssessedAtUtc" class="form-label">
+                    Assessment Date and Time
+                </label>
+
+                <input asp-for="Input.AssessedAtUtc"
+                       type="text"
+                       asp-format="{0:yyyy-MM-ddTHH:mm:sszzz}"
+                       class="form-control"
+                       aria-describedby="assessment-time-help"
+                       required />
+
+                <div id="assessment-time-help" class="form-text">
+                    Include the time-zone offset. For example:
+                    2026-10-29T14:30:00+04:00 for Baku.
+                    The time will be saved in UTC.
+                </div>
+
+                <span asp-validation-for="Input.AssessedAtUtc"
+                      class="text-danger"></span>
+            </div>
+
+            <fieldset class="border rounded p-3 mb-4">
+                <legend class="float-none w-auto px-2 fs-5">
+                    Reading Results
+                </legend>
+
+                <div class="mb-3">
+                    <label asp-for="Input.TotalWordsRead" class="form-label">
+                        Total Words Read
+                    </label>
+
+                    <input asp-for="Input.TotalWordsRead"
+                           type="number"
+                           min="0"
+                           step="1"
+                           class="form-control"
+                           required />
+
+                    <span asp-validation-for="Input.TotalWordsRead"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.CorrectWordsRead" class="form-label">
+                        Correct Words Read
+                    </label>
+
+                    <input asp-for="Input.CorrectWordsRead"
+                           type="number"
+                           min="0"
+                           step="1"
+                           class="form-control"
+                           required />
+
+                    <span asp-validation-for="Input.CorrectWordsRead"
+                          class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.DurationSeconds" class="form-label">
+                        Duration in Seconds
+                    </label>
+
+                    <input asp-for="Input.DurationSeconds"
+                           type="number"
+                           min="0.01"
+                           max="86400"
+                           step="0.01"
+                           class="form-control"
+                           required />
+
+                    <span asp-validation-for="Input.DurationSeconds"
+                          class="text-danger"></span>
+                </div>
+            </fieldset>
+
+            <fieldset class="border rounded p-3 mb-4">
+                <legend class="float-none w-auto px-2 fs-5">
+                    Comprehension — Optional
+                </legend>
+
+                <p class="text-muted">
+                    Fill in both fields, or leave both empty.
+                </p>
+
+                <div class="mb-3">
+                    <label asp-for="Input.ComprehensionCorrectAnswers"
+                           class="form-label">
+                        Correct Answers
+                    </label>
+
+                    <input asp-for="Input.ComprehensionCorrectAnswers"
+                           type="number"
+                           min="0"
+                           step="1"
+                           class="form-control" />
+
+                    <span asp-validation-for="Input.ComprehensionCorrectAnswers"
+                          class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.ComprehensionTotalQuestions"
+                           class="form-label">
+                        Total Questions
+                    </label>
+
+                    <input asp-for="Input.ComprehensionTotalQuestions"
+                           type="number"
+                           min="1"
+                           step="1"
+                           class="form-control" />
+
+                    <span asp-validation-for="Input.ComprehensionTotalQuestions"
+                          class="text-danger"></span>
+                </div>
+            </fieldset>
+
+            <div class="mb-3">
+                <label asp-for="Input.Notes" class="form-label">
+                    Teacher Notes — Optional
+                </label>
+
+                <textarea asp-for="Input.Notes"
+                          class="form-control"
+                          rows="4"
+                          maxlength="2000"></textarea>
+
+                <span asp-validation-for="Input.Notes"
+                      class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Save Assessment
+            </button>
+
+            <a asp-action="Index"
+               asp-route-studentId="@Model.Student.Id"
+               class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>

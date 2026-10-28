@@ -1,0 +1,91 @@
+@model List<OxuMen.Models.Student>
+
+@{
+    ViewData["Title"] = "Students";
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">
+        @message
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Students</h1>
+
+    <a asp-controller="StudentPages"
+       asp-action="Create"
+       class="btn btn-primary">
+        Add Student
+    </a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">
+        No students have been added yet. Select Add Student to get started.
+    </div>
+}
+else
+{
+    <p class="text-muted">Total students: @Model.Count</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>Registered students and available actions.</caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Class Group</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var student in Model)
+                {
+                    <tr>
+                        <th scope="row">
+                            @student.FirstName @student.LastName
+                        </th>
+
+                        <td>@student.GradeLevel</td>
+                        <td>@student.ClassGroup</td>
+
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-action="Details"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                <a asp-action="Edit"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-sm btn-outline-secondary">
+                                    Edit
+                                </a>
+
+                                <a asp-controller="AssessmentPages"
+                                   asp-action="Create"
+                                   asp-route-studentId="@student.Id"
+                                   class="btn btn-sm btn-outline-success">
+                                    Add Assessment
+                                </a>
+
+                                <a asp-action="Delete"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

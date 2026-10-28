@@ -1,0 +1,115 @@
+@model OxuMen.ViewModels.AssessmentPageViewModel
+
+@{
+    ViewData["Title"] = "Assessment History";
+}
+
+<h1>Assessment History</h1>
+
+<p class="text-muted">
+    @Model.Student.FirstName @Model.Student.LastName
+    · Grade @Model.Student.GradeLevel
+    · @Model.Student.ClassGroup
+</p>
+
+<div class="mb-4">
+    <a asp-action="Create"
+       asp-route-studentId="@Model.Student.Id"
+       class="btn btn-primary">
+        Add Assessment
+    </a>
+
+    <a asp-controller="StudentPages"
+       asp-action="Details"
+       asp-route-id="@Model.Student.Id"
+       class="btn btn-outline-secondary">
+        Back to Student
+    </a>
+</div>
+
+@if (Model.Assessments.Count == 0)
+{
+    <div class="alert alert-info">
+        No assessments have been recorded for this student.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>
+                Reading assessments, newest first. Different texts and
+                conditions may affect the comparability of results.
+            </caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Date (UTC)</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Text</th>
+                    <th scope="col">Words/min</th>
+                    <th scope="col">Correct words/min</th>
+                    <th scope="col">Accuracy</th>
+                    <th scope="col">Comprehension</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var assessment in Model.Assessments)
+                {
+                    <tr>
+                        <td>
+                            @assessment.AssessedAtUtc.ToString("yyyy-MM-dd HH:mm")
+                        </td>
+
+                        <td>@assessment.Kind</td>
+
+                        <td>
+                            @assessment.TextReference
+                            <small class="d-block text-muted">
+                                Version @assessment.TextVersion
+                            </small>
+                        </td>
+
+                        <td>
+                            @(assessment.WordsPerMinute?.ToString("0.##") ?? "N/A")
+                        </td>
+
+                        <td>
+                            @(assessment.CorrectWordsPerMinute?.ToString("0.##") ?? "N/A")
+                        </td>
+
+                        <td>
+                            @(assessment.AccuracyPercentage.HasValue
+                                ? assessment.AccuracyPercentage.Value.ToString("0.##") + "%"
+                                : "N/A")
+                        </td>
+
+                        <td>
+                            @if (assessment.ComprehensionTotalQuestions.HasValue)
+                            {
+                                <span>
+                                    @assessment.ComprehensionCorrectAnswers /
+                                    @assessment.ComprehensionTotalQuestions
+                                </span>
+                            }
+                            else
+                            {
+                                <span>Not assessed</span>
+                            }
+                        </td>
+
+                        <td>
+                            <a asp-action="Details"
+                               asp-route-id="@assessment.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

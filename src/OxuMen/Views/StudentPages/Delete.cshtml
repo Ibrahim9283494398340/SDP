@@ -1,0 +1,68 @@
+@model OxuMen.Models.Student
+
+@{
+    ViewData["Title"] = "Delete Student";
+    var hasAssessments = ViewData["HasAssessments"] is true;
+}
+
+<h1>Delete Student</h1>
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert">
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h2 class="h4">
+            @Model.FirstName @Model.LastName
+        </h2>
+
+        <p>
+            Grade @Model.GradeLevel · @Model.ClassGroup
+        </p>
+
+        @if (hasAssessments)
+        {
+            <div class="alert alert-warning">
+                This student has recorded assessments and cannot be deleted.
+                Their profile must remain available for assessment history.
+            </div>
+
+            <a asp-controller="AssessmentPages"
+               asp-action="Index"
+               asp-route-studentId="@Model.Id"
+               class="btn btn-outline-primary">
+                Assessment History
+            </a>
+
+            <a asp-action="Details"
+               asp-route-id="@Model.Id"
+               class="btn btn-secondary">
+                Back to Student
+            </a>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                This will permanently remove the student profile.
+            </div>
+
+            <form asp-controller="StudentPages"
+                  asp-action="Delete"
+                  asp-route-id="@Model.Id"
+                  method="post">
+
+                <button type="submit" class="btn btn-danger">
+                    Confirm Delete
+                </button>
+
+                <a asp-action="Details"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        }
+    </div>
+</div>

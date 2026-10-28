@@ -1,0 +1,145 @@
+@model OxuMen.ViewModels.AssessmentPageViewModel
+
+@{
+    ViewData["Title"] = "Assessment Results";
+    var assessment = Model.Assessment!;
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">
+        @message
+    </div>
+}
+
+<h1>Assessment Results</h1>
+
+<p class="text-muted">
+    @Model.Student.FirstName @Model.Student.LastName
+</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5">Assessment Information</h2>
+
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Type</dt>
+            <dd class="col-sm-8">@assessment.Kind</dd>
+
+            <dt class="col-sm-4">Text Reference</dt>
+            <dd class="col-sm-8">@assessment.TextReference</dd>
+
+            <dt class="col-sm-4">Text Version</dt>
+            <dd class="col-sm-8">@assessment.TextVersion</dd>
+
+            <dt class="col-sm-4">Assessed At (UTC)</dt>
+            <dd class="col-sm-8">
+                @assessment.AssessedAtUtc.ToString("yyyy-MM-dd HH:mm")
+            </dd>
+
+            <dt class="col-sm-4">Recorded At (UTC)</dt>
+            <dd class="col-sm-8">
+                @assessment.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="table-responsive mb-4">
+    <table class="table table-bordered">
+        <caption>
+            Reading measures are reported separately.
+            They do not automatically determine a support level.
+        </caption>
+
+        <thead>
+            <tr>
+                <th scope="col">Measure</th>
+                <th scope="col">Result</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <th scope="row">Total Words Read</th>
+                <td>@assessment.TotalWordsRead</td>
+            </tr>
+
+            <tr>
+                <th scope="row">Correct Words Read</th>
+                <td>@assessment.CorrectWordsRead</td>
+            </tr>
+
+            <tr>
+                <th scope="row">Duration</th>
+                <td>@assessment.DurationSeconds.ToString("0.##") seconds</td>
+            </tr>
+
+            <tr>
+                <th scope="row">Reading Speed</th>
+                <td>
+                    @(assessment.WordsPerMinute?.ToString("0.##") ?? "N/A")
+                    words/min
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">Correct Words per Minute</th>
+                <td>
+                    @(assessment.CorrectWordsPerMinute?.ToString("0.##") ?? "N/A")
+                    correct words/min
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">Accuracy</th>
+                <td>
+                    @(assessment.AccuracyPercentage.HasValue
+                        ? assessment.AccuracyPercentage.Value.ToString("0.##") + "%"
+                        : "Not calculable — no words read")
+                </td>
+            </tr>
+
+            <tr>
+                <th scope="row">Comprehension</th>
+                <td>
+                    @if (assessment.ComprehensionTotalQuestions.HasValue)
+                    {
+                        <span>
+                            @assessment.ComprehensionCorrectAnswers
+                            out of
+                            @assessment.ComprehensionTotalQuestions
+                        </span>
+                    }
+                    else
+                    {
+                        <span>Not assessed</span>
+                    }
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(assessment.Notes))
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Teacher Notes</h2>
+            <p class="mb-0" style="white-space: pre-wrap;">@assessment.Notes</p>
+        </div>
+    </div>
+}
+
+<a asp-action="Index"
+   asp-route-studentId="@Model.Student.Id"
+   class="btn btn-primary">
+    Assessment History
+</a>
+
+<a asp-controller="StudentPages"
+   asp-action="Details"
+   asp-route-id="@Model.Student.Id"
+   class="btn btn-outline-secondary">
+    Back to Student
+</a>

@@ -1,0 +1,84 @@
+@model OxuMen.Models.StudentRequest
+
+<div asp-validation-summary="All"
+     class="text-danger"
+     role="alert">
+</div>
+
+<div class="mb-3">
+    <label asp-for="FirstName" class="form-label">
+        First Name
+    </label>
+
+    <input asp-for="FirstName"
+           class="form-control"
+           maxlength="50"
+           required />
+
+    <span asp-validation-for="FirstName"
+          class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="LastName" class="form-label">
+        Last Name
+    </label>
+
+    <input asp-for="LastName"
+           class="form-control"
+           maxlength="50"
+           required />
+
+    <span asp-validation-for="LastName"
+          class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="GradeLevel" class="form-label">
+        Grade Level
+    </label>
+
+    <select asp-for="GradeLevel" class="form-select">
+        <option value="0">Select a grade</option>
+
+        @for (var grade = 1; grade <= 5; grade++)
+        {
+            <option value="@grade">Grade @grade</option>
+        }
+    </select>
+
+    <span asp-validation-for="GradeLevel"
+          class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="ClassGroup" class="form-label">
+        Class Group
+    </label>
+
+    <select asp-for="ClassGroup"
+            class="form-select"
+            aria-describedby="class-group-help"
+            required>
+        <option value="">Select a class group</option>
+
+        @for (var grade = 1; grade <= 5; grade++)
+        {
+            <optgroup label="Grade @grade">
+                @foreach (var letter in new[] { "A", "B", "C", "D" })
+                {
+                    var group = $"{grade}{letter}";
+
+                    <option value="@group">@group</option>
+                }
+            </optgroup>
+        }
+    </select>
+
+    <div id="class-group-help" class="form-text">
+        Choose a group matching the selected grade.
+    </div>
+
+    <span asp-validation-for="ClassGroup"
+          class="text-danger"></span>
+</div>

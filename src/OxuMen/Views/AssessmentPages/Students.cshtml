@@ -1,0 +1,73 @@
+@model List<OxuMen.Models.Student>
+
+@{
+    ViewData["Title"] = "Assessments";
+}
+
+<h1>Assessments</h1>
+
+<p class="text-muted">
+    Select a student to view their assessment history or record a new assessment.
+</p>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">
+        Add a student before recording an assessment.
+    </div>
+
+    <a asp-controller="StudentPages"
+       asp-action="Create"
+       class="btn btn-primary">
+        Add Student
+    </a>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>Students available for assessment.</caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Student</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Class Group</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var student in Model)
+                {
+                    <tr>
+                        <th scope="row">
+                            @student.FirstName @student.LastName
+                        </th>
+
+                        <td>@student.GradeLevel</td>
+                        <td>@student.ClassGroup</td>
+
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-controller="AssessmentPages"
+                                   asp-action="Index"
+                                   asp-route-studentId="@student.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View History
+                                </a>
+
+                                <a asp-controller="AssessmentPages"
+                                   asp-action="Create"
+                                   asp-route-studentId="@student.Id"
+                                   class="btn btn-sm btn-success">
+                                    Add Assessment
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

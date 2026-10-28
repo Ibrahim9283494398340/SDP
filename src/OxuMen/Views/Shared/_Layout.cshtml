@@ -2,64 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"] — OxuMən</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - OxuMen</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
     <link rel="stylesheet"
           href="~/css/site.css"
           asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/OxuMen.styles.css"
+          asp-append-version="true" />
 </head>
 <body>
-    <a class="skip-link" href="#main-content">Skip to main content</a>
-
-    <div class="app-shell">
-        <aside class="sidebar">
-            <a class="brand" asp-controller="Home" asp-action="Index">
-                <span aria-hidden="true">📖</span> OxuMən
-            </a>
-
-            <p class="brand-caption">Read. Understand. Grow.</p>
-
-            <div class="role-label">TEACHER DASHBOARD</div>
-
-            <nav aria-label="Main navigation">
-                <a asp-controller="Home" asp-action="Index">
-                    Overview
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand"
+                   asp-area=""
+                   asp-controller="StudentPages"
+                   asp-action="Index">
+                    OxuMen
                 </a>
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   asp-fragment="students">
-                    Students
-                </a>
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNavigation"
+                        aria-controls="mainNavigation"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   asp-fragment="workflow">
-                    Learning Journey
-                </a>
-            </nav>
+                <div id="mainNavigation"
+                     class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark"
+                               asp-area=""
+                               asp-controller="StudentPages"
+                               asp-action="Index">
+                                Students
+                            </a>
+                        </li>
 
-            <div class="sidebar-note">
-                Supporting teachers.<br />
-                Helping every student grow.
+                        <li class="nav-item">
+                            <a class="nav-link text-dark"
+                               asp-area=""
+                               asp-controller="AssessmentPages"
+                               asp-action="Index"
+                               asp-route-studentId=""
+                               asp-route-id="">
+                                Assessments
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </aside>
+        </nav>
+    </header>
 
-        <div class="workspace">
-            <header class="topbar">
-                <span>OxuMən Learning Platform</span>
-                <span class="workspace-badge">Teacher Workspace</span>
-            </header>
-
-            <main id="main-content" class="page" tabindex="-1">
-                @RenderBody()
-            </main>
-
-            <footer>
-                OxuMən · Reading support for primary school students
-            </footer>
-        </div>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
     </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; @DateTime.UtcNow.Year - OxuMen
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
