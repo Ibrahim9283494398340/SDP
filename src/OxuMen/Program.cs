@@ -2,11 +2,15 @@ using OxuMen.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register MVC services.
 builder.Services.AddControllersWithViews();
 
-// Use JSON storage for student data.
-builder.Services.AddSingleton<IStudentRepository, JsonStudentRepository>();
+builder.Services.AddSingleton<
+    IStudentRepository,
+    JsonStudentRepository>();
+
+builder.Services.AddSingleton<
+    IReadingAssessmentRepository,
+    JsonReadingAssessmentRepository>();
 
 var app = builder.Build();
 
@@ -23,12 +27,10 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// Map API endpoints, including /api/students.
 app.MapControllers();
 
-// Keep the existing MVC pages.
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=StudentPages}/{action=Index}/{id?}");
 
 app.Run();

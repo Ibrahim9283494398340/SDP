@@ -1,0 +1,77 @@
+@model OxuMen.Models.Student
+
+@{
+    ViewData["Title"] = "Student Details";
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">
+        @message
+    </div>
+}
+
+<h1>Student Details</h1>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h2 class="h4 mb-4">
+            @Model.FirstName @Model.LastName
+        </h2>
+
+        <dl class="row">
+            <dt class="col-sm-3">Student ID</dt>
+            <dd class="col-sm-9 text-break">@Model.Id</dd>
+
+            <dt class="col-sm-3">First Name</dt>
+            <dd class="col-sm-9">@Model.FirstName</dd>
+
+            <dt class="col-sm-3">Last Name</dt>
+            <dd class="col-sm-9">@Model.LastName</dd>
+
+            <dt class="col-sm-3">Grade Level</dt>
+            <dd class="col-sm-9">@Model.GradeLevel</dd>
+
+            <dt class="col-sm-3">Class Group</dt>
+            <dd class="col-sm-9">@Model.ClassGroup</dd>
+
+            <dt class="col-sm-3">Created (UTC)</dt>
+            <dd class="col-sm-9">
+                @Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")
+            </dd>
+        </dl>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-controller="AssessmentPages"
+               asp-action="Create"
+               asp-route-studentId="@Model.Id"
+               class="btn btn-success">
+                Add Assessment
+            </a>
+
+            <a asp-controller="AssessmentPages"
+               asp-action="Index"
+               asp-route-studentId="@Model.Id"
+               class="btn btn-outline-primary">
+                Assessment History
+            </a>
+
+            <a asp-action="Edit"
+               asp-route-id="@Model.Id"
+               class="btn btn-primary">
+                Edit Student
+            </a>
+
+            <a asp-action="Delete"
+               asp-route-id="@Model.Id"
+               class="btn btn-outline-danger">
+                Delete Student
+            </a>
+
+            <a asp-action="Index"
+               class="btn btn-outline-secondary">
+                Back to Students
+            </a>
+        </div>
+    </div>
+</div>

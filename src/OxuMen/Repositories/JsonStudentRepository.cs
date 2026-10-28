@@ -101,9 +101,38 @@ public class JsonStudentRepository : IStudentRepository
             existingStudent.GradeLevel = student.GradeLevel;
             existingStudent.ClassGroup = student.ClassGroup;
 
+            // Keep the original ID and creation date.
             await SaveStudentsAsync(students);
 
             return existingStudent;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        await _fileLock.WaitAsync();
+
+        try
+        {
+            var students = await ReadStudentsAsync();
+
+            var student = students.FirstOrDefault(
+                existing => existing.Id == id);
+
+            if (student is null)
+            {
+                return false;
+            }
+
+            students.Remove(student);
+
+            await SaveStudentsAsync(students);
+
+            return true;
         }
         finally
         {

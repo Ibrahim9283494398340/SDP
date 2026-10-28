@@ -1,0 +1,31 @@
+@model OxuMen.Models.StudentRequest
+
+@{
+    ViewData["Title"] = "Add Student";
+}
+
+<h1>Add Student</h1>
+
+<div class="row mt-4">
+    <div class="col-md-8 col-lg-6">
+        <form asp-controller="StudentPages"
+              asp-action="Create"
+              method="post">
+
+            <partial name="_StudentForm" model="Model" />
+
+            <button type="submit" class="btn btn-primary">
+                Create Student
+            </button>
+
+            <a asp-action="Index"
+               class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

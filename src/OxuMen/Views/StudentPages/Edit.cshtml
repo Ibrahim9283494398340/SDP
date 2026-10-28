@@ -1,0 +1,34 @@
+@model OxuMen.Models.StudentRequest
+
+@{
+    ViewData["Title"] = "Edit Student";
+    var studentId = (Guid)ViewData["StudentId"]!;
+}
+
+<h1>Edit Student</h1>
+
+<div class="row mt-4">
+    <div class="col-md-8 col-lg-6">
+        <form asp-controller="StudentPages"
+              asp-action="Edit"
+              asp-route-id="@studentId"
+              method="post">
+
+            <partial name="_StudentForm" model="Model" />
+
+            <button type="submit" class="btn btn-primary">
+                Save Changes
+            </button>
+
+            <a asp-action="Details"
+               asp-route-id="@studentId"
+               class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
