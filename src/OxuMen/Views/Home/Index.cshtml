@@ -1,8 +1,135 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Teacher Dashboard";
+
+    var students = new[]
+    {
+        new { Name = "Aylin M.", Speed = 62, Accuracy = 94, Comprehension = 7 },
+        new { Name = "Rashad A.", Speed = 48, Accuracy = 88, Comprehension = 6 },
+        new { Name = "Zahra K.", Speed = 71, Accuracy = 97, Comprehension = 8 },
+        new { Name = "Murad H.", Speed = 36, Accuracy = 82, Comprehension = 4 }
+    };
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="welcome" aria-labelledby="welcome-title">
+    <div>
+        <p class="eyebrow">TEACHER DASHBOARD</p>
+        <h1 id="welcome-title">Welcome back!</h1>
+        <p>Follow every student's reading journey.</p>
+
+        <a class="primary-link" href="#students">
+            View student results →
+        </a>
+    </div>
+
+    <div class="welcome-icon" aria-hidden="true">📚</div>
+</section>
+
+<section class="stats" aria-label="Class overview">
+    <article class="stat-card">
+        <span>Students</span>
+        <strong>@students.Length</strong>
+        <small>Class roster</small>
+    </article>
+
+    <article class="stat-card">
+        <span>Grade Level</span>
+        <strong>Grade 3</strong>
+        <small>Primary school</small>
+    </article>
+
+    <article class="stat-card">
+        <span>Reading Metrics</span>
+        <strong>3</strong>
+        <small>Speed, accuracy, and comprehension</small>
+    </article>
+</section>
+
+<section id="students" class="panel" aria-labelledby="students-title">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">CLASS OVERVIEW</p>
+            <h2 id="students-title">Student Results</h2>
+        </div>
+
+        <span class="chip">Grade 3</span>
+    </div>
+
+    <div class="table-scroll"
+         tabindex="0"
+         role="region"
+         aria-label="Student results table">
+        <table>
+            <caption>
+                Reading assessment — each metric is reported separately.
+            </caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Student</th>
+                    <th scope="col">Reading Speed</th>
+                    <th scope="col">Accuracy</th>
+                    <th scope="col">Comprehension</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var student in students)
+                {
+                    <tr>
+                        <th scope="row">
+                            <span class="avatar" aria-hidden="true">
+                                @student.Name.Substring(0, 1)
+                            </span>
+                            @student.Name
+                        </th>
+
+                        <td>
+                            <strong>@student.Speed</strong>
+                            <span class="unit">words/min</span>
+                        </td>
+
+                        <td>@student.Accuracy%</td>
+                        <td>@student.Comprehension / 10</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <p class="table-note">
+        These figures do not establish a diagnosis or automatically determine
+        a support level. Results require teacher review.
+    </p>
+</section>
+
+<div class="bottom-grid">
+    <section id="workflow"
+             class="panel"
+             aria-labelledby="workflow-title">
+        <p class="eyebrow">STEP-BY-STEP SUPPORT</p>
+        <h2 id="workflow-title">The Student Learning Journey</h2>
+
+        <ol class="workflow">
+            <li>Create a student profile</li>
+            <li>Complete an initial assessment and review results</li>
+            <li>Develop a personalized plan approved by the teacher</li>
+            <li>Practice with teacher support</li>
+            <li>Reassess skills and report progress</li>
+        </ol>
+    </section>
+
+    <section class="panel guidance" aria-labelledby="guidance-title">
+        <span class="guidance-icon" aria-hidden="true">💡</span>
+        <h2 id="guidance-title">Teachers Guide Every Decision</h2>
+
+        <p>
+            Reading speed, accuracy, and comprehension are tracked separately.
+            Personalized support plans are informed by teacher observations.
+        </p>
+
+        <p>
+            When AI recommendations are introduced, they will require
+            teacher approval before being applied.
+        </p>
+    </section>
 </div>
