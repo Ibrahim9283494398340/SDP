@@ -12,11 +12,11 @@
     · @Model.Student.ClassGroup
 </p>
 
-<div class="mb-4">
-    <a asp-action="Create"
-       asp-route-studentId="@Model.Student.Id"
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a asp-controller="GroupTasks"
+       asp-action="Index"
        class="btn btn-primary">
-        Add Assessment
+        Group Tasks
     </a>
 
     <a asp-controller="StudentPages"
@@ -30,7 +30,8 @@
 @if (Model.Assessments.Count == 0)
 {
     <div class="alert alert-info">
-        No assessments have been recorded for this student.
+        No assessment results have been recorded for this student.
+        Open a group task to record results.
     </div>
 }
 else
@@ -60,7 +61,7 @@ else
                 {
                     <tr>
                         <td>
-                            @assessment.AssessedAtUtc.ToString("yyyy-MM-dd HH:mm")
+                            @assessment.AssessedAtUtc.ToUniversalTime().ToString("yyyy-MM-dd HH:mm")
                         </td>
 
                         <td>@assessment.Kind</td>
@@ -101,11 +102,24 @@ else
                         </td>
 
                         <td>
-                            <a asp-action="Details"
-                               asp-route-id="@assessment.Id"
-                               class="btn btn-sm btn-outline-primary">
-                                View
-                            </a>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-controller="AssessmentPages"
+                                   asp-action="Details"
+                                   asp-route-id="@assessment.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View Results
+                                </a>
+
+                                @if (assessment.GroupTaskId.HasValue)
+                                {
+                                    <a asp-controller="GroupTasks"
+                                       asp-action="Details"
+                                       asp-route-id="@assessment.GroupTaskId.Value"
+                                       class="btn btn-sm btn-outline-success">
+                                        View Task
+                                    </a>
+                                }
+                            </div>
                         </td>
                     </tr>
                 }

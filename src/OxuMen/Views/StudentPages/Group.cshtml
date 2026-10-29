@@ -1,0 +1,117 @@
+@model List<OxuMen.Models.Student>
+
+@{
+    var groupName = ViewData["GroupName"] as string;
+    ViewData["Title"] = $"Group {groupName}";
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">
+        @message
+    </div>
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1>Group @groupName</h1>
+        <p class="text-muted mb-0">Total students: @Model.Count</p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="StudentPages"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            Back to Groups
+        </a>
+
+        <a asp-controller="StudentPages"
+           asp-action="Create"
+           asp-route-group="@groupName"
+           class="btn btn-primary">
+            Add Student
+        </a>
+
+        <a asp-controller="GroupTasks"
+           asp-action="Group"
+           asp-route-group="@groupName"
+           class="btn btn-outline-success">
+            View Tasks
+        </a>
+
+        @if (Model.Count > 0)
+        {
+            <a asp-controller="GroupTasks"
+               asp-action="Create"
+               asp-route-group="@groupName"
+               class="btn btn-success">
+                Assign Task
+            </a>
+        }
+    </div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">
+        This group has no students yet. Add students before assigning a task.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>Students in group @groupName.</caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var student in Model)
+                {
+                    <tr>
+                        <th scope="row">
+                            @student.FirstName @student.LastName
+                        </th>
+
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-controller="StudentPages"
+                                   asp-action="Details"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                <a asp-controller="StudentPages"
+                                   asp-action="Edit"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-sm btn-outline-secondary">
+                                    Edit
+                                </a>
+
+                                <a asp-controller="AssessmentPages"
+                                   asp-action="Index"
+                                   asp-route-studentId="@student.Id"
+                                   class="btn btn-sm btn-outline-success">
+                                    Assessment History
+                                </a>
+
+                                <a asp-controller="StudentPages"
+                                   asp-action="Delete"
+                                   asp-route-id="@student.Id"
+                                   class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

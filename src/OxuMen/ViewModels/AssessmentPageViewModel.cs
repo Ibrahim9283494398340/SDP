@@ -11,4 +11,6 @@ public class AssessmentPageViewModel
     public List<ReadingAssessment> Assessments { get; set; } = new();
 
     public ReadingAssessment? Assessment { get; set; }
+
+    public Guid? GroupTaskId { get; set; }
 }

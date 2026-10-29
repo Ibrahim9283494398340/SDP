@@ -1,10 +1,10 @@
 @model OxuMen.ViewModels.AssessmentPageViewModel
 
 @{
-    ViewData["Title"] = "Add Reading Assessment";
+    ViewData["Title"] = "Record Results";
 }
 
-<h1>Add Reading Assessment</h1>
+<h1>Record Results</h1>
 
 <p class="text-muted">
     Student: @Model.Student.FirstName @Model.Student.LastName
@@ -15,58 +15,24 @@
         <form asp-controller="AssessmentPages"
               asp-action="Create"
               asp-route-studentId="@Model.Student.Id"
+              asp-route-taskId="@Model.GroupTaskId"
               method="post">
 
             <input asp-for="Input.StudentId" type="hidden" />
+            <input asp-for="Input.Kind" type="hidden" />
+            <input asp-for="Input.TextReference" type="hidden" />
+            <input asp-for="Input.TextVersion" type="hidden" />
 
             <div asp-validation-summary="All"
-                 class="text-danger"
+                 class="text-danger mb-3"
                  role="alert">
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Input.Kind" class="form-label">
-                    Assessment Type
-                </label>
-
-                <select asp-for="Input.Kind"
-                        asp-items="Html.GetEnumSelectList<OxuMen.Models.AssessmentKind>()"
-                        class="form-select">
-                </select>
-
-                <span asp-validation-for="Input.Kind"
-                      class="text-danger"></span>
-            </div>
-
-            <div class="row">
-                <div class="col-md-8 mb-3">
-                    <label asp-for="Input.TextReference" class="form-label">
-                        Text Reference
-                    </label>
-
-                    <input asp-for="Input.TextReference"
-                           class="form-control"
-                           placeholder="For example, reading-text-001"
-                           maxlength="100"
-                           required />
-
-                    <span asp-validation-for="Input.TextReference"
-                          class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Input.TextVersion" class="form-label">
-                        Text Version
-                    </label>
-
-                    <input asp-for="Input.TextVersion"
-                           class="form-control"
-                           placeholder="For example, 1"
-                           maxlength="30"
-                           required />
-
-                    <span asp-validation-for="Input.TextVersion"
-                          class="text-danger"></span>
+            <div class="alert alert-light border">
+                <strong>@Model.Input.TextReference</strong>
+                <div class="text-muted">
+                    Version @Model.Input.TextVersion
+                    · @Model.Input.Kind
                 </div>
             </div>
 
@@ -204,14 +170,19 @@
             </div>
 
             <button type="submit" class="btn btn-primary">
-                Save Assessment
+                Save Results
             </button>
 
-            <a asp-action="Index"
-               asp-route-studentId="@Model.Student.Id"
+            <a asp-controller="GroupTasks"
+               asp-action="Details"
+               asp-route-id="@Model.GroupTaskId"
                class="btn btn-outline-secondary">
                 Cancel
             </a>
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

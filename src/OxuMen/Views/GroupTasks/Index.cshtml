@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Assessments";
+}
+
+<h1>Assessments</h1>
+<p class="text-muted">Choose a group to view or assign reading tasks.</p>
+
+@for (var grade = 1; grade <= 5; grade++)
+{
+    <h2 class="h5 mt-4">Grade @grade</h2>
+
+    <div class="row g-3">
+        @foreach (var letter in "ABCD")
+        {
+            var group = $"{grade}{letter}";
+
+            <div class="col-6 col-md-3">
+                <a asp-action="Group"
+                   asp-route-group="@group"
+                   class="card text-decoration-none shadow-sm">
+                    <div class="card-body text-center py-4">
+                        <h3 class="h2 mb-0">@group</h3>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+}

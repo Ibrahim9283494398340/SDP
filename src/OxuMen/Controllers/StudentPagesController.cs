@@ -9,6 +9,10 @@ public class StudentPagesController : Controller
     private readonly IStudentRepository _studentRepository;
     private readonly IReadingAssessmentRepository _assessmentRepository;
 
+    private static readonly string[] GroupNames = Enumerable.Range(1, 5)
+        .SelectMany(grade => "ABCD".Select(letter => $"{grade}{letter}"))
+        .ToArray();
+
     public StudentPagesController(
         IStudentRepository studentRepository,
         IReadingAssessmentRepository assessmentRepository)
@@ -17,17 +21,53 @@ public class StudentPagesController : Controller
         _assessmentRepository = assessmentRepository;
     }
 
+    private static string GetGroupName(Student student)
+    {
+        var group = student.ClassGroup.Trim().ToUpperInvariant();
+
+        return group.Length == 1
+            ? $"{student.GradeLevel}{group}"
+            : group;
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index()
     {
         var students = await _studentRepository.GetAllAsync();
 
-        var sortedStudents = students
+        var groups = GroupNames.ToDictionary(
+            group => group,
+            group => students.Count(student => GetGroupName(student) == group));
+
+        return View(groups);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Group(string group)
+    {
+        if (string.IsNullOrWhiteSpace(group))
+        {
+            return NotFound("Group not found.");
+        }
+
+        group = group.Trim().ToUpperInvariant();
+
+        if (!GroupNames.Contains(group))
+        {
+            return NotFound("Group not found.");
+        }
+
+        var students = await _studentRepository.GetAllAsync();
+
+        var groupStudents = students
+            .Where(student => GetGroupName(student) == group)
             .OrderBy(student => student.LastName)
             .ThenBy(student => student.FirstName)
             .ToList();
 
-        return View(sortedStudents);
+        ViewData["GroupName"] = group;
+
+        return View(groupStudents);
     }
 
     [HttpGet]
@@ -44,15 +84,48 @@ public class StudentPagesController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public IActionResult Create(string? group)
     {
-        return View(new StudentRequest());
+        var request = new StudentRequest();
+
+        if (!string.IsNullOrWhiteSpace(group))
+        {
+            group = group.Trim().ToUpperInvariant();
+
+            if (!GroupNames.Contains(group))
+            {
+                return NotFound("Group not found.");
+            }
+
+            request.ClassGroup = group;
+            request.GradeLevel = group[0] - '0';
+        }
+
+        return View(request);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(StudentRequest request)
     {
+        var group = (request.ClassGroup ?? string.Empty)
+            .Trim()
+            .ToUpperInvariant();
+
+        if (!GroupNames.Contains(group))
+        {
+            ModelState.AddModelError(
+                nameof(StudentRequest.ClassGroup),
+                "Choose a group from 1A to 5D.");
+        }
+        else
+        {
+            request.ClassGroup = group;
+            request.GradeLevel = group[0] - '0';
+
+            ModelState.Remove(nameof(StudentRequest.GradeLevel));
+        }
+
         if (!ModelState.IsValid)
         {
             return View(request);
@@ -63,17 +136,14 @@ public class StudentPagesController : Controller
             FirstName = request.FirstName.Trim(),
             LastName = request.LastName.Trim(),
             GradeLevel = request.GradeLevel,
-            ClassGroup = request.ClassGroup.Trim()
+            ClassGroup = request.ClassGroup
         };
 
-        var createdStudent =
-            await _studentRepository.CreateAsync(student);
+        await _studentRepository.CreateAsync(student);
 
         TempData["SuccessMessage"] = "Student created successfully.";
 
-        return RedirectToAction(
-            nameof(Details),
-            new { id = createdStudent.Id });
+        return RedirectToAction(nameof(Group), new { group });
     }
 
     [HttpGet]
@@ -101,12 +171,9 @@ public class StudentPagesController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(
-        Guid id,
-        StudentRequest request)
+    public async Task<IActionResult> Edit(Guid id, StudentRequest request)
     {
-        var existingStudent =
-            await _studentRepository.GetByIdAsync(id);
+        var existingStudent = await _studentRepository.GetByIdAsync(id);
 
         if (existingStudent is null)
         {
@@ -129,8 +196,7 @@ public class StudentPagesController : Controller
             ClassGroup = request.ClassGroup.Trim()
         };
 
-        var updatedStudent =
-            await _studentRepository.UpdateAsync(student);
+        var updatedStudent = await _studentRepository.UpdateAsync(student);
 
         if (updatedStudent is null)
         {
@@ -152,8 +218,7 @@ public class StudentPagesController : Controller
             return NotFound("Student not found.");
         }
 
-        var assessments =
-            await _assessmentRepository.GetForStudentAsync(id);
+        var assessments = await _assessmentRepository.GetForStudentAsync(id);
 
         ViewData["HasAssessments"] = assessments.Count > 0;
 
@@ -172,8 +237,7 @@ public class StudentPagesController : Controller
             return NotFound("Student not found.");
         }
 
-        var assessments =
-            await _assessmentRepository.GetForStudentAsync(id);
+        var assessments = await _assessmentRepository.GetForStudentAsync(id);
 
         if (assessments.Count > 0)
         {
@@ -186,6 +250,7 @@ public class StudentPagesController : Controller
             return View("Delete", student);
         }
 
+        var group = GetGroupName(student);
         var deleted = await _studentRepository.DeleteAsync(id);
 
         if (!deleted)
@@ -195,6 +260,8 @@ public class StudentPagesController : Controller
 
         TempData["SuccessMessage"] = "Student deleted successfully.";
 
-        return RedirectToAction(nameof(Index));
+        return GroupNames.Contains(group)
+            ? RedirectToAction(nameof(Group), new { group })
+            : RedirectToAction(nameof(Index));
     }
 }
