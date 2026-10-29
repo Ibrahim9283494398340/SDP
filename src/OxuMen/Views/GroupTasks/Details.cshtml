@@ -1,0 +1,86 @@
+@model OxuMen.ViewModels.GroupTaskDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Task.TextReference;
+    var completed = Model.Students.Count(student => student.Assessment is not null);
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<h1>@Model.Task.TextReference</h1>
+
+<p class="text-muted">
+    Group @Model.Task.ClassGroup
+    · Version @Model.Task.TextVersion
+    · @Model.Task.Kind
+</p>
+
+<p>Completed: @completed / @Model.Students.Count</p>
+
+<a asp-action="Group"
+   asp-route-group="@Model.Task.ClassGroup"
+   class="btn btn-outline-secondary mb-4">
+    Back to Tasks
+</a>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Correct Words/min</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in Model.Students)
+            {
+                <tr>
+                    <td>@student.Name</td>
+                    <td>
+                        @if (student.Assessment is not null)
+                        {
+                            <span class="badge bg-success">Completed</span>
+                        }
+                        else if (!student.IsAvailable)
+                        {
+                            <span class="badge bg-secondary">Unavailable</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        }
+                    </td>
+                    <td>
+                        @(student.Assessment?.CorrectWordsPerMinute?.ToString("0.##") ?? "—")
+                    </td>
+                    <td>
+                        @if (student.Assessment is not null && student.IsAvailable)
+                        {
+                            <a asp-controller="AssessmentPages"
+                               asp-action="Details"
+                               asp-route-id="@student.Assessment.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                View Results
+                            </a>
+                        }
+                        else if (student.IsAvailable)
+                        {
+                            <a asp-controller="AssessmentPages"
+                               asp-action="Create"
+                               asp-route-studentId="@student.StudentId"
+                               asp-route-taskId="@Model.Task.Id"
+                               class="btn btn-sm btn-primary">
+                                Record Results
+                            </a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

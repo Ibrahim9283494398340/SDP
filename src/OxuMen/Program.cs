@@ -12,6 +12,9 @@ builder.Services.AddSingleton<
     IReadingAssessmentRepository,
     JsonReadingAssessmentRepository>();
 
+builder.Services.AddSingleton<JsonGroupTaskRepository>();
+
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

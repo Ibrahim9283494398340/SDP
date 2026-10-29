@@ -1,0 +1,63 @@
+@model List<OxuMen.Models.GroupTask>
+
+@{
+    var group = ViewData["GroupName"] as string;
+    ViewData["Title"] = $"Tasks — {group}";
+}
+
+<div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+    <h1>Group @group — Tasks</h1>
+
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Back to Groups
+        </a>
+
+        <a asp-action="Create"
+           asp-route-group="@group"
+           class="btn btn-primary">
+            Assign Task
+        </a>
+    </div>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">
+        No tasks have been assigned to this group.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Text</th>
+                    <th>Version</th>
+                    <th>Type</th>
+                    <th>Assigned Students</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in Model)
+                {
+                    <tr>
+                        <td>@task.TextReference</td>
+                        <td>@task.TextVersion</td>
+                        <td>@task.Kind</td>
+                        <td>@task.StudentIds.Count</td>
+                        <td>
+                            <a asp-action="Details"
+                               asp-route-id="@task.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                View Students
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

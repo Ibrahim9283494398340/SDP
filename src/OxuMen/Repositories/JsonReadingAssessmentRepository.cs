@@ -3,8 +3,7 @@ using OxuMen.Models;
 
 namespace OxuMen.Repositories;
 
-public class JsonReadingAssessmentRepository
-    : IReadingAssessmentRepository
+public class JsonReadingAssessmentRepository : IReadingAssessmentRepository
 {
     private readonly string _filePath;
 
@@ -15,12 +14,10 @@ public class JsonReadingAssessmentRepository
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
-
         IgnoreReadOnlyProperties = true
     };
 
-    public JsonReadingAssessmentRepository(
-        IWebHostEnvironment environment)
+    public JsonReadingAssessmentRepository(IWebHostEnvironment environment)
     {
         var dataDirectory = Path.Combine(
             environment.ContentRootPath,
@@ -77,6 +74,15 @@ public class JsonReadingAssessmentRepository
         try
         {
             var assessments = await ReadAssessmentsAsync();
+
+            if (assessment.GroupTaskId.HasValue &&
+                assessments.Any(existing =>
+                    existing.GroupTaskId == assessment.GroupTaskId &&
+                    existing.StudentId == assessment.StudentId))
+            {
+                throw new InvalidOperationException(
+                    "Results have already been recorded for this student and task.");
+            }
 
             assessment.Id = Guid.NewGuid();
             assessment.CreatedAtUtc = DateTimeOffset.UtcNow;

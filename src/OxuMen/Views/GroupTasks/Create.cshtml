@@ -1,0 +1,70 @@
+@model OxuMen.Models.GroupTaskRequest
+
+@{
+    ViewData["Title"] = "Assign Task";
+
+    var groups = OxuMen.Models.SchoolGroups.All.Select(
+        group => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+        {
+            Value = group,
+            Text = group
+        });
+}
+
+<h1>Assign Task</h1>
+<p class="text-muted">
+    Assign a reading task to the students currently in a group.
+</p>
+
+<div class="row">
+    <div class="col-md-8 col-lg-6">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="ClassGroup" class="form-label">Group</label>
+                <select asp-for="ClassGroup"
+                        asp-items="groups"
+                        class="form-select">
+                    <option value="">Select a group</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Kind" class="form-label">Assessment Type</label>
+                <select asp-for="Kind"
+                        asp-items="Html.GetEnumSelectList<OxuMen.Models.AssessmentKind>()"
+                        class="form-select"></select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="TextReference" class="form-label">
+                    Text Reference
+                </label>
+                <input asp-for="TextReference"
+                       class="form-control"
+                       placeholder="For example, reading-text-001" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="TextVersion" class="form-label">
+                    Text Version
+                </label>
+                <input asp-for="TextVersion" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Assign Task
+            </button>
+
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

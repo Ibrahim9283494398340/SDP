@@ -1,7 +1,7 @@
-@model List<OxuMen.Models.Student>
+@model System.Collections.Generic.Dictionary<string, int>
 
 @{
-    ViewData["Title"] = "Students";
+    ViewData["Title"] = "Groups";
 }
 
 @if (TempData["SuccessMessage"] is string message)
@@ -11,81 +11,33 @@
     </div>
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Students</h1>
-
-    <a asp-controller="StudentPages"
-       asp-action="Create"
-       class="btn btn-primary">
-        Add Student
-    </a>
+<div class="mb-4">
+    <h1>Groups</h1>
+    <p class="text-muted">Select a group to view its students.</p>
 </div>
 
-@if (Model.Count == 0)
+@for (var grade = 1; grade <= 5; grade++)
 {
-    <div class="alert alert-info">
-        No students have been added yet. Select Add Student to get started.
-    </div>
-}
-else
-{
-    <p class="text-muted">Total students: @Model.Count</p>
+    <h2 class="h5 mb-3">Grade @grade</h2>
 
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <caption>Registered students and available actions.</caption>
+    <div class="row g-3 mb-4">
+        @foreach (var letter in "ABCD")
+        {
+            var groupName = $"{grade}{letter}";
 
-            <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Grade</th>
-                    <th scope="col">Class Group</th>
-                    <th scope="col">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var student in Model)
-                {
-                    <tr>
-                        <th scope="row">
-                            @student.FirstName @student.LastName
-                        </th>
-
-                        <td>@student.GradeLevel</td>
-                        <td>@student.ClassGroup</td>
-
-                        <td>
-                            <div class="d-flex flex-wrap gap-2">
-                                <a asp-action="Details"
-                                   asp-route-id="@student.Id"
-                                   class="btn btn-sm btn-outline-primary">
-                                    View
-                                </a>
-
-                                <a asp-action="Edit"
-                                   asp-route-id="@student.Id"
-                                   class="btn btn-sm btn-outline-secondary">
-                                    Edit
-                                </a>
-
-                                <a asp-controller="AssessmentPages"
-                                   asp-action="Create"
-                                   asp-route-studentId="@student.Id"
-                                   class="btn btn-sm btn-outline-success">
-                                    Add Assessment
-                                </a>
-
-                                <a asp-action="Delete"
-                                   asp-route-id="@student.Id"
-                                   class="btn btn-sm btn-outline-danger">
-                                    Delete
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            <div class="col-6 col-md-3">
+                <a asp-controller="StudentPages"
+                   asp-action="Group"
+                   asp-route-group="@groupName"
+                   class="card h-100 text-decoration-none text-dark shadow-sm">
+                    <div class="card-body text-center py-4">
+                        <h3 class="h2 text-primary">@groupName</h3>
+                        <p class="text-muted mb-0">
+                            Students: @Model[groupName]
+                        </p>
+                    </div>
+                </a>
+            </div>
+        }
     </div>
 }

@@ -2,6 +2,15 @@
 
 @{
     ViewData["Title"] = "Add Student";
+
+    var groups = Enumerable.Range(1, 5)
+        .SelectMany(grade => "ABCD".Select(letter => $"{grade}{letter}"))
+        .Select(group => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+        {
+            Value = group,
+            Text = group
+        })
+        .ToList();
 }
 
 <h1>Add Student</h1>
@@ -12,16 +21,59 @@
               asp-action="Create"
               method="post">
 
-            <partial name="_StudentForm" model="Model" />
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="FirstName" class="form-label">
+                    First Name
+                </label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LastName" class="form-label">
+                    Last Name
+                </label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ClassGroup" class="form-label">
+                    Group
+                </label>
+                <select asp-for="ClassGroup"
+                        asp-items="groups"
+                        class="form-select">
+                    <option value="">Select a group</option>
+                </select>
+                <span asp-validation-for="ClassGroup"
+                      class="text-danger"></span>
+            </div>
 
             <button type="submit" class="btn btn-primary">
                 Create Student
             </button>
 
-            <a asp-action="Index"
-               class="btn btn-outline-secondary">
-                Cancel
-            </a>
+            @if (!string.IsNullOrWhiteSpace(Model.ClassGroup))
+            {
+                <a asp-action="Group"
+                   asp-route-group="@Model.ClassGroup"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            }
+            else
+            {
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            }
         </form>
     </div>
 </div>

@@ -9,13 +9,16 @@ public class AssessmentPagesController : Controller
 {
     private readonly IStudentRepository _students;
     private readonly IReadingAssessmentRepository _assessments;
+    private readonly JsonGroupTaskRepository _tasks;
 
     public AssessmentPagesController(
         IStudentRepository students,
-        IReadingAssessmentRepository assessments)
+        IReadingAssessmentRepository assessments,
+        JsonGroupTaskRepository tasks)
     {
         _students = students;
         _assessments = assessments;
+        _tasks = tasks;
     }
 
     [HttpGet]
@@ -28,15 +31,7 @@ public class AssessmentPagesController : Controller
 
         if (!studentId.HasValue)
         {
-            var students = await _students.GetAllAsync();
-
-            var sortedStudents = students
-                .OrderBy(student => student.ClassGroup)
-                .ThenBy(student => student.LastName)
-                .ThenBy(student => student.FirstName)
-                .ToList();
-
-            return View("Students", sortedStudents);
+            return RedirectToAction("Index", "GroupTasks");
         }
 
         var student = await _students.GetByIdAsync(studentId.Value);
@@ -49,16 +44,32 @@ public class AssessmentPagesController : Controller
         var model = new AssessmentPageViewModel
         {
             Student = student,
-            Assessments =
-                await _assessments.GetForStudentAsync(student.Id)
+            Assessments = await _assessments.GetForStudentAsync(student.Id)
         };
 
         return View(model);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create(Guid studentId)
+    public async Task<IActionResult> Create(Guid studentId, Guid? taskId)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest("Invalid student or task ID.");
+        }
+
+        if (!taskId.HasValue)
+        {
+            return RedirectToAction("Index", "GroupTasks");
+        }
+
+        var task = await _tasks.GetByIdAsync(taskId.Value);
+
+        if (task is null || !task.StudentIds.Contains(studentId))
+        {
+            return NotFound("Student is not assigned to this task.");
+        }
+
         var student = await _students.GetByIdAsync(studentId);
 
         if (student is null)
@@ -66,13 +77,28 @@ public class AssessmentPagesController : Controller
             return NotFound("Student not found.");
         }
 
+        var assessments = await _assessments.GetForStudentAsync(studentId);
+
+        var existing = assessments.FirstOrDefault(
+            assessment => assessment.GroupTaskId == task.Id);
+
+        if (existing is not null)
+        {
+            return RedirectToAction(
+                nameof(Details),
+                new { id = existing.Id });
+        }
+
         var model = new AssessmentPageViewModel
         {
             Student = student,
+            GroupTaskId = task.Id,
             Input = new ReadingAssessmentRequest
             {
                 StudentId = studentId,
-                Kind = AssessmentKind.Initial,
+                Kind = task.Kind,
+                TextReference = task.TextReference,
+                TextVersion = task.TextVersion,
                 AssessedAtUtc = DateTimeOffset.UtcNow
             }
         };
@@ -84,8 +110,16 @@ public class AssessmentPagesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
         Guid studentId,
+        Guid taskId,
         [Bind(Prefix = "Input")] ReadingAssessmentRequest request)
     {
+        var task = await _tasks.GetByIdAsync(taskId);
+
+        if (task is null || !task.StudentIds.Contains(studentId))
+        {
+            return NotFound("Student is not assigned to this task.");
+        }
+
         var student = await _students.GetByIdAsync(studentId);
 
         if (student is null)
@@ -98,21 +132,31 @@ public class AssessmentPagesController : Controller
             return BadRequest("Student IDs do not match.");
         }
 
+        request.Kind = task.Kind;
+        request.TextReference = task.TextReference;
+        request.TextVersion = task.TextVersion;
+
+        ModelState.Remove("Input.Kind");
+        ModelState.Remove("Input.TextReference");
+        ModelState.Remove("Input.TextVersion");
+
         if (!ModelState.IsValid)
         {
             return View(new AssessmentPageViewModel
             {
                 Student = student,
+                GroupTaskId = task.Id,
                 Input = request
             });
         }
 
         var assessment = new ReadingAssessment
         {
+            GroupTaskId = task.Id,
             StudentId = studentId,
-            Kind = request.Kind,
-            TextReference = request.TextReference.Trim(),
-            TextVersion = request.TextVersion.Trim(),
+            Kind = task.Kind,
+            TextReference = task.TextReference,
+            TextVersion = task.TextVersion,
             AssessedAtUtc = request.AssessedAtUtc!.Value.ToUniversalTime(),
             TotalWordsRead = request.TotalWordsRead,
             CorrectWordsRead = request.CorrectWordsRead,
@@ -126,16 +170,41 @@ public class AssessmentPagesController : Controller
                 : request.Notes.Trim()
         };
 
-        var created = await _assessments.CreateAsync(assessment);
+        try
+        {
+            await _assessments.CreateAsync(assessment);
 
-        TempData["SuccessMessage"] = "Assessment saved successfully.";
+            TempData["SuccessMessage"] =
+                "Student results saved successfully.";
+        }
+        catch (InvalidOperationException)
+        {
+            var assessments =
+                await _assessments.GetForStudentAsync(studentId);
 
-        return RedirectToAction(nameof(Details), new { id = created.Id });
+            if (!assessments.Any(item => item.GroupTaskId == task.Id))
+            {
+                throw;
+            }
+
+            TempData["SuccessMessage"] =
+                "Results were already recorded for this student.";
+        }
+
+        return RedirectToAction(
+            "Details",
+            "GroupTasks",
+            new { id = task.Id });
     }
 
     [HttpGet]
     public async Task<IActionResult> Details(Guid id)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest("Invalid assessment ID.");
+        }
+
         var assessment = await _assessments.GetByIdAsync(id);
 
         if (assessment is null)
@@ -153,6 +222,7 @@ public class AssessmentPagesController : Controller
         return View(new AssessmentPageViewModel
         {
             Student = student,
+            GroupTaskId = assessment.GroupTaskId,
             Assessment = assessment
         });
     }

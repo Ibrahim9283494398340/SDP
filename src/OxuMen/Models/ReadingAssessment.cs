@@ -15,6 +15,8 @@ public class ReadingAssessment
 
     public Guid StudentId { get; set; }
 
+    public Guid? GroupTaskId { get; set; }
+
     public AssessmentKind Kind { get; set; }
 
     public string TextReference { get; set; } = string.Empty;
