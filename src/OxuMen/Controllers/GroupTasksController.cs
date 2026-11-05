@@ -9,12 +9,12 @@ public class GroupTasksController : Controller
 {
     private readonly IStudentRepository _students;
     private readonly IReadingAssessmentRepository _assessments;
-    private readonly JsonGroupTaskRepository _tasks;
+    private readonly IGroupTaskRepository _tasks;
 
     public GroupTasksController(
         IStudentRepository students,
         IReadingAssessmentRepository assessments,
-        JsonGroupTaskRepository tasks)
+        IGroupTaskRepository tasks)
     {
         _students = students;
         _assessments = assessments;
