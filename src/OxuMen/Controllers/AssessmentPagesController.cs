@@ -1,24 +1,32 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OxuMen.Models;
 using OxuMen.Repositories;
+using OxuMen.Security;
 using OxuMen.ViewModels;
 
 namespace OxuMen.Controllers;
 
+// Teachers and admins, limited to the teacher's own classes.
+// Students use MyController.
+[Authorize(Roles = AppRoles.TeacherOrAdmin)]
 public class AssessmentPagesController : Controller
 {
     private readonly IStudentRepository _students;
     private readonly IReadingAssessmentRepository _assessments;
     private readonly IGroupTaskRepository _tasks;
+    private readonly IClassAccess _classAccess;
 
     public AssessmentPagesController(
         IStudentRepository students,
         IReadingAssessmentRepository assessments,
-        IGroupTaskRepository tasks)
+        IGroupTaskRepository tasks,
+        IClassAccess classAccess)
     {
         _students = students;
         _assessments = assessments;
         _tasks = tasks;
+        _classAccess = classAccess;
     }
 
     [HttpGet]
@@ -36,7 +44,7 @@ public class AssessmentPagesController : Controller
 
         var student = await _students.GetByIdAsync(studentId.Value);
 
-        if (student is null)
+        if (student is null || !await _classAccess.CanAccessStudentAsync(student))
         {
             return NotFound("Student not found.");
         }
@@ -65,7 +73,9 @@ public class AssessmentPagesController : Controller
 
         var task = await _tasks.GetByIdAsync(taskId.Value);
 
-        if (task is null || !task.StudentIds.Contains(studentId))
+        if (task is null ||
+            !task.StudentIds.Contains(studentId) ||
+            !await _classAccess.CanAccessGroupAsync(task.ClassGroup))
         {
             return NotFound("Student is not assigned to this task.");
         }
@@ -115,7 +125,9 @@ public class AssessmentPagesController : Controller
     {
         var task = await _tasks.GetByIdAsync(taskId);
 
-        if (task is null || !task.StudentIds.Contains(studentId))
+        if (task is null ||
+            !task.StudentIds.Contains(studentId) ||
+            !await _classAccess.CanAccessGroupAsync(task.ClassGroup))
         {
             return NotFound("Student is not assigned to this task.");
         }
@@ -217,6 +229,23 @@ public class AssessmentPagesController : Controller
         if (student is null)
         {
             return NotFound("Student not found.");
+        }
+
+        // Visible if the student is in one of the teacher's classes now,
+        // or the result was recorded for a task in one of them.
+        var canSee = await _classAccess.CanAccessStudentAsync(student);
+
+        if (!canSee && assessment.GroupTaskId.HasValue)
+        {
+            var task = await _tasks.GetByIdAsync(assessment.GroupTaskId.Value);
+
+            canSee = task is not null &&
+                     await _classAccess.CanAccessGroupAsync(task.ClassGroup);
+        }
+
+        if (!canSee)
+        {
+            return NotFound("Assessment not found.");
         }
 
         return View(new AssessmentPageViewModel

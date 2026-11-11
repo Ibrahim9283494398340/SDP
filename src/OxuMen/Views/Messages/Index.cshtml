@@ -1,0 +1,66 @@
+@model List<OxuMen.ViewModels.ConversationListItemViewModel>
+
+@{
+    ViewData["Title"] = "Messages";
+    var isParent = User.IsInRole(OxuMen.Models.AppRoles.Parent);
+}
+
+<h1>Messages</h1>
+
+<p class="text-muted">
+    @if (isParent)
+    {
+        <span>
+            To write to a teacher, open your child under
+            <a asp-controller="Parent" asp-action="Index">My Children</a>
+            and choose <strong>Message Teacher</strong>.
+        </span>
+    }
+    else
+    {
+        <span>
+            Parents write to you about their child. To write to a parent first,
+            open the student and choose <strong>Message</strong> next to the parent.
+        </span>
+    }
+</p>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">No messages yet.</div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var item in Model)
+        {
+            var childName = item.Student is null
+                ? "(student removed)"
+                : $"{item.Student.FirstName} {item.Student.LastName}";
+
+            <a asp-controller="Messages"
+               asp-action="Conversation"
+               asp-route-studentId="@item.StudentId"
+               asp-route-otherUserId="@item.OtherUserId"
+               class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between">
+                    <span class="@(item.UnreadCount > 0 ? "fw-bold" : "")">
+                        @item.OtherUserName · about @childName
+                    </span>
+                    <small class="text-muted">
+                        @item.LastMessage.SentAtUtc.ToString("yyyy-MM-dd HH:mm") UTC
+                    </small>
+                </div>
+
+                <div class="text-muted text-truncate">
+                    @item.LastMessage.Body
+                </div>
+
+                @if (item.UnreadCount > 0)
+                {
+                    <span class="badge bg-primary">@item.UnreadCount new</span>
+                }
+            </a>
+        }
+    </div>
+}

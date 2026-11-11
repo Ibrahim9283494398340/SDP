@@ -43,6 +43,22 @@ public class EfGroupTaskRepository : IGroupTaskRepository
         return task;
     }
 
+    public async Task<List<GroupTask>> GetForStudentAsync(Guid studentId)
+    {
+        var tasks = await _db.GroupTasks
+            .AsNoTracking()
+            .Include(task => task.Assignments)
+            .Where(task => task.Assignments.Any(
+                assignment => assignment.StudentId == studentId))
+            .ToListAsync();
+
+        tasks.ForEach(FillStudentIds);
+
+        return tasks
+            .OrderByDescending(task => task.CreatedAtUtc)
+            .ToList();
+    }
+
     public async Task<GroupTask> CreateAsync(GroupTask task)
     {
         task.Id = Guid.NewGuid();

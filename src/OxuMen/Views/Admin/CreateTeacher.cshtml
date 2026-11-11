@@ -1,0 +1,61 @@
+@model OxuMen.Models.NewTeacherRequest
+
+@{
+    ViewData["Title"] = "Add Teacher";
+
+    var classPicker = new OxuMen.ViewModels.ClassPickerViewModel
+    {
+        FieldName = nameof(Model.Classes),
+        Selected = Model.Classes
+    };
+}
+
+<h1>Add Teacher</h1>
+
+<div class="row mt-4">
+    <div class="col-lg-8">
+        <form asp-controller="Admin"
+              asp-action="CreateTeacher"
+              method="post">
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3"
+                 role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="UserName" class="form-label"></label>
+                <input asp-for="UserName"
+                       class="form-control"
+                       autocomplete="off" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password"
+                       class="form-control"
+                       autocomplete="new-password" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword" class="form-label"></label>
+                <input asp-for="ConfirmPassword"
+                       class="form-control"
+                       autocomplete="new-password" />
+            </div>
+
+            <partial name="_ClassPicker" model="classPicker" />
+
+            <button type="submit" class="btn btn-primary">
+                Create Teacher
+            </button>
+
+            <a asp-action="Teachers" class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

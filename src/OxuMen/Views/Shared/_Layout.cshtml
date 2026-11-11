@@ -1,4 +1,21 @@
-﻿<!DOCTYPE html>
+﻿@inject OxuMen.Repositories.IMessageRepository MessageRepository
+@{
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    var isTeacher = User.IsInRole(AppRoles.Teacher);
+    var isStudent = User.IsInRole(AppRoles.Student);
+    var isParent = User.IsInRole(AppRoles.Parent);
+
+    // Unread messages, shown next to "Messages" for teachers and parents.
+    var unreadMessages = 0;
+
+    if ((isTeacher || isParent) &&
+        OxuMen.Security.AppClaims.GetUserId(User) is Guid layoutUserId)
+    {
+        unreadMessages = await MessageRepository.CountUnreadAsync(layoutUserId);
+    }
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -23,8 +40,8 @@
             <div class="container-fluid">
                 <a class="navbar-brand"
                    asp-area=""
-                   asp-controller="StudentPages"
-                   asp-action="Index">
+                   asp-controller="Home"
+                   asp-action="Start">
                     OxuMen
                 </a>
 
@@ -41,25 +58,128 @@
                 <div id="mainNavigation"
                      class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="StudentPages"
-                               asp-action="Index">
-                                Groups
-                            </a>
-                        </li>
+                        @if (isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="Admin"
+                                   asp-action="Teachers">
+                                    Teachers
+                                </a>
+                            </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="GroupTasks"
-                               asp-action="Index"
-                               asp-route-id="">
-                                Assessments
-                            </a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="Admin"
+                                   asp-action="Students">
+                                    Students
+                                </a>
+                            </li>
+                        }
+
+                        @if (isTeacher || isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="StudentPages"
+                                   asp-action="Index">
+                                    Groups
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="GroupTasks"
+                                   asp-action="Index"
+                                   asp-route-id="">
+                                    Assessments
+                                </a>
+                            </li>
+
+                            if (isTeacher)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-area=""
+                                       asp-controller="Messages"
+                                       asp-action="Index">
+                                        Messages
+                                        @if (unreadMessages > 0)
+                                        {
+                                            <span class="badge bg-primary">@unreadMessages</span>
+                                        }
+                                    </a>
+                                </li>
+                            }
+                        }
+                        else if (isStudent)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="My"
+                                   asp-action="Index">
+                                    My Page
+                                </a>
+                            </li>
+                        }
+                        else if (isParent)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="Parent"
+                                   asp-action="Index">
+                                    My Children
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="Messages"
+                                   asp-action="Index">
+                                    Messages
+                                    @if (unreadMessages > 0)
+                                    {
+                                        <span class="badge bg-primary">@unreadMessages</span>
+                                    }
+                                </a>
+                            </li>
+                        }
                     </ul>
+
+                    @if (isSignedIn)
+                    {
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="navbar-text text-muted small">
+                                @(User.Identity?.Name)
+                                (@(isAdmin ? "admin" : isTeacher ? "teacher" : isParent ? "parent" : "student"))
+                            </span>
+
+                            <a class="btn btn-sm btn-outline-secondary"
+                               asp-area=""
+                               asp-controller="Account"
+                               asp-action="ChangePassword">
+                                Change Password
+                            </a>
+
+                            <form asp-area=""
+                                  asp-controller="Account"
+                                  asp-action="Logout"
+                                  method="post"
+                                  class="d-inline">
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger">
+                                    Sign Out
+                                </button>
+                            </form>
+                        </div>
+                    }
                 </div>
             </div>
         </nav>
@@ -83,4 +203,4 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html>
+</html>

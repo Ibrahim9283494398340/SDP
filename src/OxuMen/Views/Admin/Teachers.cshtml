@@ -1,0 +1,83 @@
+@model List<OxuMen.ViewModels.TeacherListItemViewModel>
+
+@{
+    ViewData["Title"] = "Teachers";
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1>Teachers</h1>
+        <p class="text-muted mb-0">
+            Each teacher only sees the students, tasks and results of their
+            own classes.
+        </p>
+    </div>
+
+    <a asp-action="CreateTeacher" class="btn btn-primary">
+        Add Teacher
+    </a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">No teachers yet.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">User name</th>
+                    <th scope="col">Classes</th>
+                    <th scope="col">Students</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <th scope="row">@item.User.UserName</th>
+                        <td>
+                            @if (item.Classes.Count == 0)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    No classes
+                                </span>
+                            }
+                            else
+                            {
+                                foreach (var group in item.Classes)
+                                {
+                                    <span class="badge bg-primary me-1">@group</span>
+                                }
+                            }
+                        </td>
+                        <td>@item.StudentCount</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-action="EditTeacher"
+                                   asp-route-id="@item.User.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Classes
+                                </a>
+
+                                <a asp-action="DeleteTeacher"
+                                   asp-route-id="@item.User.Id"
+                                   class="btn btn-sm btn-outline-danger">
+                                    Remove
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

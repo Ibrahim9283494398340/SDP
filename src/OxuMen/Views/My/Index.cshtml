@@ -1,0 +1,157 @@
+@model OxuMen.ViewModels.MyPageViewModel
+
+@{
+    ViewData["Title"] = "My Page";
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<h1>Hello, @Model.Student.FirstName!</h1>
+
+<p class="text-muted">
+    @Model.Student.FirstName @Model.Student.LastName
+    · Grade @Model.Student.GradeLevel
+    · Group @Model.Student.ClassGroup
+</p>
+
+<div class="alert alert-light border" style="max-width: 32rem;">
+    <strong>Parent code:</strong>
+    <span class="font-monospace fs-5 ms-1">@Model.ParentCode</span>
+    <div class="small text-muted">
+        Give this code to your parent so they can create a parent account
+        and see your results.
+    </div>
+</div>
+
+<h2 class="h4 mt-4">My Reading Tasks</h2>
+
+@if (Model.Tasks.Count == 0)
+{
+    <div class="alert alert-info">
+        Your teacher has not given you a reading task yet.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Text</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Tasks)
+                {
+                    <tr>
+                        <td>
+                            @item.Task.TextReference
+                            <small class="d-block text-muted">
+                                Version @item.Task.TextVersion
+                            </small>
+                        </td>
+                        <td>@item.Task.Kind</td>
+                        <td>
+                            @if (item.Assessment is not null)
+                            {
+                                <span class="badge bg-success">Done</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Waiting for your teacher
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.Assessment is not null)
+                            {
+                                <a asp-controller="My"
+                                   asp-action="Result"
+                                   asp-route-id="@item.Assessment.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    See My Result
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h2 class="h4 mt-4">My Results</h2>
+
+@if (Model.Assessments.Count == 0)
+{
+    <div class="alert alert-info">
+        You have no results yet.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>
+                Newest first. Each measure is shown separately.
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Date (UTC)</th>
+                    <th scope="col">Text</th>
+                    <th scope="col">Words/min</th>
+                    <th scope="col">Correct words/min</th>
+                    <th scope="col">Accuracy</th>
+                    <th scope="col">Comprehension</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var assessment in Model.Assessments)
+                {
+                    <tr>
+                        <td>
+                            @assessment.AssessedAtUtc.ToUniversalTime().ToString("yyyy-MM-dd HH:mm")
+                        </td>
+                        <td>@assessment.TextReference</td>
+                        <td>@(assessment.WordsPerMinute?.ToString("0.##") ?? "N/A")</td>
+                        <td>@(assessment.CorrectWordsPerMinute?.ToString("0.##") ?? "N/A")</td>
+                        <td>
+                            @(assessment.AccuracyPercentage.HasValue
+                                ? assessment.AccuracyPercentage.Value.ToString("0.##") + "%"
+                                : "N/A")
+                        </td>
+                        <td>
+                            @if (assessment.ComprehensionTotalQuestions.HasValue)
+                            {
+                                <span>
+                                    @assessment.ComprehensionCorrectAnswers /
+                                    @assessment.ComprehensionTotalQuestions
+                                </span>
+                            }
+                            else
+                            {
+                                <span>Not assessed</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-controller="My"
+                               asp-action="Result"
+                               asp-route-id="@assessment.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

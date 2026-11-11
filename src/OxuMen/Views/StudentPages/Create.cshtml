@@ -3,8 +3,10 @@
 @{
     ViewData["Title"] = "Add Student";
 
-    var groups = Enumerable.Range(1, 5)
-        .SelectMany(grade => "ABCD".Select(letter => $"{grade}{letter}"))
+    var allowedGroups = ViewData["AllowedGroups"] as IEnumerable<string>
+        ?? Enumerable.Empty<string>();
+
+    var groups = allowedGroups
         .Select(group => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
         {
             Value = group,

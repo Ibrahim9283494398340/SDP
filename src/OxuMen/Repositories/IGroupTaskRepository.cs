@@ -8,5 +8,7 @@ public interface IGroupTaskRepository
 
     Task<GroupTask?> GetByIdAsync(Guid id);
 
+    Task<List<GroupTask>> GetForStudentAsync(Guid studentId);
+
     Task<GroupTask> CreateAsync(GroupTask task);
 }

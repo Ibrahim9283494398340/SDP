@@ -1,0 +1,85 @@
+@model OxuMen.ViewModels.StudentLoginViewModel
+
+@{
+    var hasLogin = Model.ExistingUserName is not null;
+    ViewData["Title"] = "Reset Student Password";
+}
+
+<h1>Reset Student Password</h1>
+
+<p class="text-muted">
+    @Model.Student.FirstName @Model.Student.LastName
+    · Group @Model.Student.ClassGroup
+</p>
+
+<div class="row mt-4">
+    <div class="col-md-8 col-lg-5">
+        @if (!hasLogin)
+        {
+            <div class="alert alert-info">
+                This student has not created an account yet. Students sign up
+                themselves with <strong>Create your account</strong> on the
+                sign-in page.
+            </div>
+
+            <a asp-controller="StudentPages"
+               asp-action="Details"
+               asp-route-id="@Model.Student.Id"
+               class="btn btn-outline-secondary">
+                Back to Student
+            </a>
+        }
+        else
+        {
+            <div class="alert alert-light border">
+                User name: <strong>@Model.ExistingUserName</strong>
+            </div>
+
+            <p>
+                Set a new password below. The student is signed out on any
+                device that is still signed in.
+            </p>
+
+            <form asp-controller="StudentLogins"
+                  asp-action="Manage"
+                  asp-route-id="@Model.Student.Id"
+                  method="post">
+
+                <div asp-validation-summary="All"
+                     class="text-danger mb-3"
+                     role="alert"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label">
+                        New password
+                    </label>
+                    <input asp-for="Input.Password"
+                           class="form-control"
+                           autocomplete="new-password" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                    <input asp-for="Input.ConfirmPassword"
+                           class="form-control"
+                           autocomplete="new-password" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Reset Password
+                </button>
+
+                <a asp-controller="StudentPages"
+                   asp-action="Details"
+                   asp-route-id="@Model.Student.Id"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
