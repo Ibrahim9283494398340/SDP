@@ -35,6 +35,9 @@ public interface IUserRepository
     // Every teacher's classes, keyed by user ID.
     Task<Dictionary<Guid, List<string>>> GetAllTeacherClassesAsync();
 
+    // Teacher accounts that have this class, sorted by user name.
+    Task<List<AppUser>> GetTeachersForClassAsync(string classGroup);
+
     // Replaces the teacher's class list.
     Task SetTeacherClassesAsync(Guid userId, IEnumerable<string> classGroups);
 }

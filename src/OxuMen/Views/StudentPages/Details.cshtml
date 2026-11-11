@@ -3,6 +3,9 @@
 @{
     ViewData["Title"] = "Student Details";
     var loginUserName = ViewData["LoginUserName"] as string;
+    var parentCode = ViewData["ParentCode"] as string;
+    var parents = ViewData["Parents"] as List<OxuMen.Models.AppUser>
+        ?? new List<OxuMen.Models.AppUser>();
 }
 
 @if (TempData["SuccessMessage"] is string message)
@@ -39,6 +42,39 @@
             <dt class="col-sm-3">Login</dt>
             <dd class="col-sm-9">
                 @(loginUserName ?? "Has not created an account yet")
+            </dd>
+
+            <dt class="col-sm-3">Parent code</dt>
+            <dd class="col-sm-9">
+                <span class="font-monospace">@parentCode</span>
+                <div class="small text-muted">
+                    A parent enters this code to create a parent account
+                    linked to this student.
+                </div>
+            </dd>
+
+            <dt class="col-sm-3">Parents</dt>
+            <dd class="col-sm-9">
+                @if (parents.Count == 0)
+                {
+                    <span>No parent linked yet</span>
+                }
+                else
+                {
+                    foreach (var parent in parents)
+                    {
+                        <div class="mb-1">
+                            @parent.UserName
+                            <a asp-controller="Messages"
+                               asp-action="Conversation"
+                               asp-route-studentId="@Model.Id"
+                               asp-route-otherUserId="@parent.Id"
+                               class="btn btn-sm btn-outline-primary ms-2">
+                                Message
+                            </a>
+                        </div>
+                    }
+                }
             </dd>
 
             <dt class="col-sm-3">Created (UTC)</dt>

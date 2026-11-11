@@ -7,19 +7,23 @@ using OxuMen.ViewModels;
 namespace OxuMen.Controllers;
 
 // Admins only: create teachers, decide which classes each teacher sees,
-// and remove teachers. The admin cannot change a teacher's password.
+// and remove teachers; see every student and move students between
+// classes. The admin cannot change a teacher's password.
 [Authorize(Roles = AppRoles.Admin)]
 public class AdminController : Controller
 {
     private readonly IUserRepository _users;
     private readonly IStudentRepository _students;
+    private readonly IMessageRepository _messages;
 
     public AdminController(
         IUserRepository users,
-        IStudentRepository students)
+        IStudentRepository students,
+        IMessageRepository messages)
     {
         _users = users;
         _students = students;
+        _messages = messages;
     }
 
     [HttpGet]
@@ -190,13 +194,99 @@ public class AdminController : Controller
             return NotFound("Teacher not found.");
         }
 
-        // Students, tasks and results stay; only the account goes.
+        // Students, tasks and results stay; the account and its messages go.
+        await _messages.DeleteForUserAsync(teacher.Id);
         await _users.DeleteAsync(teacher.Id);
 
         TempData["SuccessMessage"] =
             $"Teacher \"{teacher.UserName}\" was removed.";
 
         return RedirectToAction(nameof(Teachers));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Students(string? group)
+    {
+        group = string.IsNullOrWhiteSpace(group)
+            ? null
+            : group.Trim().ToUpperInvariant();
+
+        if (group is not null && !SchoolGroups.All.Contains(group))
+        {
+            group = null;
+        }
+
+        var students = await _students.GetAllAsync();
+        var rows = new List<AdminStudentRowViewModel>();
+
+        foreach (var student in students)
+        {
+            var studentGroup = SchoolGroups.GetName(student);
+
+            if (group is not null && studentGroup != group)
+            {
+                continue;
+            }
+
+            rows.Add(new AdminStudentRowViewModel
+            {
+                Student = student,
+                ClassGroup = studentGroup,
+                UserName = (await _users.GetForStudentAsync(student.Id))?.UserName
+            });
+        }
+
+        return View(new AdminStudentsViewModel
+        {
+            Group = group,
+            Students = rows
+                .OrderBy(row => Array.IndexOf(SchoolGroups.All, row.ClassGroup))
+                .ThenBy(row => row.Student.LastName)
+                .ThenBy(row => row.Student.FirstName)
+                .ToList()
+        });
+    }
+
+    // Moves a student to another class. Their results stay with them; the
+    // teachers of the new class see them from now on.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeClass(
+        Guid id,
+        string? classGroup,
+        string? returnGroup)
+    {
+        var student = await _students.GetByIdAsync(id);
+
+        if (student is null)
+        {
+            return NotFound("Student not found.");
+        }
+
+        var group = (classGroup ?? string.Empty).Trim().ToUpperInvariant();
+
+        if (!SchoolGroups.All.Contains(group))
+        {
+            TempData["ErrorMessage"] = "Choose a class from 1A to 5D.";
+
+            return RedirectToAction(nameof(Students), new { group = returnGroup });
+        }
+
+        var oldGroup = SchoolGroups.GetName(student);
+
+        if (oldGroup != group)
+        {
+            student.ClassGroup = group;
+            student.GradeLevel = group[0] - '0';
+
+            await _students.UpdateAsync(student);
+
+            TempData["SuccessMessage"] =
+                $"{student.FirstName} {student.LastName} was moved from " +
+                $"{oldGroup} to {group}.";
+        }
+
+        return RedirectToAction(nameof(Students), new { group = returnGroup });
     }
 
     // Only teacher accounts can be managed here, never admins or students.

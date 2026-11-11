@@ -57,19 +57,236 @@ public static class UserSetup
             """);
     }
 
+    // Tables for parents: parent-child links, parent codes and messages.
+    public static async Task EnsureParentTablesAsync(OxuMenDbContext db)
+    {
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "ParentChildren" (
+                "ParentUserId" TEXT NOT NULL,
+                "StudentId" TEXT NOT NULL,
+                CONSTRAINT "PK_ParentChildren" PRIMARY KEY ("ParentUserId", "StudentId"),
+                CONSTRAINT "FK_ParentChildren_Users_ParentUserId" FOREIGN KEY ("ParentUserId")
+                    REFERENCES "Users" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_ParentChildren_Students_StudentId" FOREIGN KEY ("StudentId")
+                    REFERENCES "Students" ("Id") ON DELETE CASCADE
+            );
+            """);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE INDEX IF NOT EXISTS "IX_ParentChildren_StudentId"
+                ON "ParentChildren" ("StudentId");
+            """);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "ParentCodes" (
+                "StudentId" TEXT NOT NULL CONSTRAINT "PK_ParentCodes" PRIMARY KEY,
+                "Code" TEXT NOT NULL,
+                CONSTRAINT "FK_ParentCodes_Students_StudentId" FOREIGN KEY ("StudentId")
+                    REFERENCES "Students" ("Id") ON DELETE CASCADE
+            );
+            """);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_ParentCodes_Code"
+                ON "ParentCodes" ("Code");
+            """);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS "Messages" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_Messages" PRIMARY KEY,
+                "StudentId" TEXT NOT NULL,
+                "ParentUserId" TEXT NOT NULL,
+                "TeacherUserId" TEXT NOT NULL,
+                "SenderUserId" TEXT NOT NULL,
+                "Body" TEXT NOT NULL,
+                "SentAtUtc" TEXT NOT NULL,
+                "ReadAtUtc" TEXT NULL,
+                CONSTRAINT "FK_Messages_Students_StudentId" FOREIGN KEY ("StudentId")
+                    REFERENCES "Students" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_Messages_Users_ParentUserId" FOREIGN KEY ("ParentUserId")
+                    REFERENCES "Users" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_Messages_Users_TeacherUserId" FOREIGN KEY ("TeacherUserId")
+                    REFERENCES "Users" ("Id") ON DELETE CASCADE
+            );
+            """);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE INDEX IF NOT EXISTS "IX_Messages_StudentId_ParentUserId_TeacherUserId"
+                ON "Messages" ("StudentId", "ParentUserId", "TeacherUserId");
+            """);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE INDEX IF NOT EXISTS "IX_Messages_TeacherUserId"
+                ON "Messages" ("TeacherUserId");
+            """);
+
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE INDEX IF NOT EXISTS "IX_Messages_ParentUserId"
+                ON "Messages" ("ParentUserId");
+            """);
+    }
+
     // 1. Creates an admin account when there is none, so someone can sign
     //    in and set up teachers. Password from Seed:AdminPassword, or a
     //    random one printed once in the log.
     // 2. Only when Seed:TeacherPassword is set (development): creates the
     //    example teacher, and gives it Seed:TeacherClasses if it has no
     //    classes yet.
+    // 3. Only when Seed:StudentPassword is set (development): creates an
+    //    example student with one sample result and teacher note, and if
+    //    Seed:ParentPassword is set, an example parent linked to them.
     public static async Task SeedAccountsAsync(
-        IUserRepository users,
+        IServiceProvider services,
         IConfiguration configuration,
         ILogger logger)
     {
+        var users = services.GetRequiredService<IUserRepository>();
+
         await SeedAdminAsync(users, configuration, logger);
         await SeedExampleTeacherAsync(users, configuration, logger);
+        await SeedExampleStudentAndParentAsync(services, configuration, logger);
+    }
+
+    private static async Task SeedExampleStudentAndParentAsync(
+        IServiceProvider services,
+        IConfiguration configuration,
+        ILogger logger)
+    {
+        var studentPassword = configuration["Seed:StudentPassword"];
+
+        if (string.IsNullOrWhiteSpace(studentPassword))
+        {
+            return;
+        }
+
+        var users = services.GetRequiredService<IUserRepository>();
+
+        var studentUserName = configuration["Seed:StudentUserName"];
+
+        if (string.IsNullOrWhiteSpace(studentUserName))
+        {
+            studentUserName = "student";
+        }
+
+        var classGroup = (configuration["Seed:StudentClass"] ?? "1A")
+            .Trim()
+            .ToUpperInvariant();
+
+        if (!SchoolGroups.All.Contains(classGroup))
+        {
+            classGroup = "1A";
+        }
+
+        Guid? studentId;
+        var studentLogin = await users.GetByUserNameAsync(studentUserName);
+
+        if (studentLogin is null)
+        {
+            studentId = await CreateExampleStudentAsync(
+                services, users, studentUserName, studentPassword, classGroup);
+
+            logger.LogInformation(
+                "Created the example student {UserName} in {Class}.",
+                studentUserName,
+                classGroup);
+        }
+        else
+        {
+            studentId = studentLogin.StudentId;
+        }
+
+        var parentPassword = configuration["Seed:ParentPassword"];
+
+        if (string.IsNullOrWhiteSpace(parentPassword) || studentId is null)
+        {
+            return;
+        }
+
+        var parentUserName = configuration["Seed:ParentUserName"];
+
+        if (string.IsNullOrWhiteSpace(parentUserName))
+        {
+            parentUserName = "parent";
+        }
+
+        var parent = await users.GetByUserNameAsync(parentUserName);
+
+        if (parent is null)
+        {
+            parent = await users.CreateAsync(
+                new AppUser
+                {
+                    UserName = parentUserName,
+                    Role = AppRoles.Parent
+                },
+                parentPassword);
+
+            await services.GetRequiredService<IParentRepository>()
+                .LinkAsync(parent.Id, studentId.Value);
+
+            logger.LogInformation(
+                "Created the example parent {UserName}, linked to {Student}.",
+                parentUserName,
+                studentUserName);
+        }
+    }
+
+    // The example student's profile, login, one task and one result with a
+    // teacher note, so the parent pages have something to show.
+    private static async Task<Guid> CreateExampleStudentAsync(
+        IServiceProvider services,
+        IUserRepository users,
+        string userName,
+        string password,
+        string classGroup)
+    {
+        var student = await services.GetRequiredService<IStudentRepository>()
+            .CreateAsync(new Student
+            {
+                FirstName = "Example",
+                LastName = "Student",
+                GradeLevel = classGroup[0] - '0',
+                ClassGroup = classGroup
+            });
+
+        await users.CreateAsync(
+            new AppUser
+            {
+                UserName = userName,
+                Role = AppRoles.Student,
+                StudentId = student.Id
+            },
+            password);
+
+        var task = await services.GetRequiredService<IGroupTaskRepository>()
+            .CreateAsync(new GroupTask
+            {
+                ClassGroup = classGroup,
+                Kind = AssessmentKind.Initial,
+                TextReference = "example-text-001",
+                TextVersion = "1",
+                StudentIds = new List<Guid> { student.Id }
+            });
+
+        await services.GetRequiredService<IReadingAssessmentRepository>()
+            .CreateAsync(new ReadingAssessment
+            {
+                StudentId = student.Id,
+                GroupTaskId = task.Id,
+                Kind = task.Kind,
+                TextReference = task.TextReference,
+                TextVersion = task.TextVersion,
+                AssessedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+                TotalWordsRead = 62,
+                CorrectWordsRead = 57,
+                DurationSeconds = 60,
+                ComprehensionCorrectAnswers = 4,
+                ComprehensionTotalQuestions = 5,
+                Notes = "Reads with good expression. Some longer words are " +
+                        "still hard; reading short texts aloud at home will help."
+            });
+
+        return student.Id;
     }
 
     private static async Task SeedAdminAsync(

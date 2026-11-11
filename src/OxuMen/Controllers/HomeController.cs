@@ -35,6 +35,11 @@ public class HomeController : Controller
             return RedirectToAction("Index", "My");
         }
 
+        if (User.IsInRole(AppRoles.Parent))
+        {
+            return RedirectToAction("Index", "Parent");
+        }
+
         await HttpContext.SignOutAsync(
             CookieAuthenticationDefaults.AuthenticationScheme);
 

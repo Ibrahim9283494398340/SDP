@@ -38,6 +38,8 @@ builder.Services.AddScoped<IStudentRepository, EfStudentRepository>();
 builder.Services.AddScoped<IReadingAssessmentRepository, EfReadingAssessmentRepository>();
 builder.Services.AddScoped<IGroupTaskRepository, EfGroupTaskRepository>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+builder.Services.AddScoped<IParentRepository, EfParentRepository>();
+builder.Services.AddScoped<IMessageRepository, EfMessageRepository>();
 
 // Which classes the signed-in teacher may see.
 builder.Services.AddHttpContextAccessor();
@@ -132,6 +134,7 @@ using (var scope = app.Services.CreateScope())
     // Adds the Users table to a database created before logins existed.
     await UserSetup.EnsureUsersTableAsync(db);
     await UserSetup.EnsureTeacherClassesTableAsync(db);
+    await UserSetup.EnsureParentTablesAsync(db);
 
     await JsonDataImporter.ImportAsync(
         db,
@@ -139,7 +142,7 @@ using (var scope = app.Services.CreateScope())
         app.Logger);
 
     await UserSetup.SeedAccountsAsync(
-        scope.ServiceProvider.GetRequiredService<IUserRepository>(),
+        scope.ServiceProvider,
         app.Configuration,
         app.Logger);
 }

@@ -8,6 +8,7 @@ namespace OxuMen.Controllers;
 
 // Teachers and admins. A teacher only sees and changes students in their
 // own classes; a student outside them looks the same as a missing one.
+// Students are not added here: they sign up themselves.
 // Students use MyController.
 [Authorize(Roles = AppRoles.TeacherOrAdmin)]
 public class StudentPagesController : Controller
@@ -16,6 +17,8 @@ public class StudentPagesController : Controller
     private readonly IReadingAssessmentRepository _assessmentRepository;
     private readonly IUserRepository _userRepository;
     private readonly IClassAccess _classAccess;
+    private readonly IParentRepository _parentRepository;
+    private readonly IMessageRepository _messageRepository;
 
     private static readonly string[] GroupNames = Enumerable.Range(1, 5)
         .SelectMany(grade => "ABCD".Select(letter => $"{grade}{letter}"))
@@ -25,8 +28,12 @@ public class StudentPagesController : Controller
         IStudentRepository studentRepository,
         IReadingAssessmentRepository assessmentRepository,
         IUserRepository userRepository,
-        IClassAccess classAccess)
+        IClassAccess classAccess,
+        IParentRepository parentRepository,
+        IMessageRepository messageRepository)
     {
+        _parentRepository = parentRepository;
+        _messageRepository = messageRepository;
         _studentRepository = studentRepository;
         _assessmentRepository = assessmentRepository;
         _userRepository = userRepository;
@@ -123,85 +130,30 @@ public class StudentPagesController : Controller
 
         ViewData["LoginUserName"] = login?.UserName;
 
+        // So the teacher can give the code to a parent, and see who is linked.
+        ViewData["ParentCode"] = OxuMen.Models.ParentCode.Format(
+            await _parentRepository.GetOrCreateCodeAsync(id));
+
+        var parents = new List<AppUser>();
+
+        foreach (var parentId in await _parentRepository.GetParentIdsAsync(id))
+        {
+            var parent = await _userRepository.GetByIdAsync(parentId);
+
+            if (parent is not null)
+            {
+                parents.Add(parent);
+            }
+        }
+
+        ViewData["Parents"] = parents;
+
         return View(student);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Create(string? group)
-    {
-        var request = new StudentRequest();
-
-        if (!string.IsNullOrWhiteSpace(group))
-        {
-            group = group.Trim().ToUpperInvariant();
-
-            if (!GroupNames.Contains(group))
-            {
-                return NotFound("Group not found.");
-            }
-
-            if (!await _classAccess.CanAccessGroupAsync(group))
-            {
-                return Forbid();
-            }
-
-            request.ClassGroup = group;
-            request.GradeLevel = group[0] - '0';
-        }
-
-        await SetAllowedGroupsAsync();
-
-        return View(request);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(StudentRequest request)
-    {
-        var group = (request.ClassGroup ?? string.Empty)
-            .Trim()
-            .ToUpperInvariant();
-
-        if (!GroupNames.Contains(group))
-        {
-            ModelState.AddModelError(
-                nameof(StudentRequest.ClassGroup),
-                "Choose a group from 1A to 5D.");
-        }
-        else if (!await _classAccess.CanAccessGroupAsync(group))
-        {
-            ModelState.AddModelError(
-                nameof(StudentRequest.ClassGroup),
-                "You can only add students to your own classes.");
-        }
-        else
-        {
-            request.ClassGroup = group;
-            request.GradeLevel = group[0] - '0';
-
-            ModelState.Remove(nameof(StudentRequest.GradeLevel));
-        }
-
-        if (!ModelState.IsValid)
-        {
-            await SetAllowedGroupsAsync();
-            return View(request);
-        }
-
-        var student = new Student
-        {
-            FirstName = request.FirstName.Trim(),
-            LastName = request.LastName.Trim(),
-            GradeLevel = request.GradeLevel,
-            ClassGroup = request.ClassGroup
-        };
-
-        await _studentRepository.CreateAsync(student);
-
-        TempData["SuccessMessage"] = "Student created successfully.";
-
-        return RedirectToAction(nameof(Group), new { group });
-    }
+    // Teachers do not add students: students create their own account
+    // (Account/Register), which makes their profile. Turned off for now
+    // until the team decides how teacher-added students should log in.
 
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
@@ -320,7 +272,10 @@ public class StudentPagesController : Controller
 
         var group = GetGroupName(student);
 
-        // The student's login goes with the profile.
+        // The student's login, parent links, parent code and messages go
+        // with the profile.
+        await _messageRepository.DeleteForStudentAsync(id);
+        await _parentRepository.DeleteForStudentAsync(id);
         await _userRepository.DeleteForStudentAsync(id);
 
         var deleted = await _studentRepository.DeleteAsync(id);

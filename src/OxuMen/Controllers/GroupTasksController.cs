@@ -112,7 +112,7 @@ public class GroupTasksController : Controller
         {
             ModelState.AddModelError(
                 nameof(request.ClassGroup),
-                "Add students to this group before assigning a task.");
+                "No students have signed up for this group yet.");
 
             return View(request);
         }

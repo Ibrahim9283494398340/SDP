@@ -17,15 +17,18 @@ public class MyController : Controller
     private readonly IStudentRepository _students;
     private readonly IReadingAssessmentRepository _assessments;
     private readonly IGroupTaskRepository _tasks;
+    private readonly IParentRepository _parents;
 
     public MyController(
         IStudentRepository students,
         IReadingAssessmentRepository assessments,
-        IGroupTaskRepository tasks)
+        IGroupTaskRepository tasks,
+        IParentRepository parents)
     {
         _students = students;
         _assessments = assessments;
         _tasks = tasks;
+        _parents = parents;
     }
 
     [HttpGet]
@@ -45,6 +48,8 @@ public class MyController : Controller
         {
             Student = student,
             Assessments = assessments,
+            ParentCode = OxuMen.Models.ParentCode.Format(
+                await _parents.GetOrCreateCodeAsync(student.Id)),
             Tasks = tasks
                 .Select(task => new MyTaskViewModel
                 {

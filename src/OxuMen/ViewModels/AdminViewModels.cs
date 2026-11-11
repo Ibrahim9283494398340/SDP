@@ -28,3 +28,21 @@ public class ClassPickerViewModel
 
     public List<string> Selected { get; set; } = new();
 }
+
+public class AdminStudentsViewModel
+{
+    // The class filter, or null for all classes.
+    public string? Group { get; set; }
+
+    public List<AdminStudentRowViewModel> Students { get; set; } = new();
+}
+
+public class AdminStudentRowViewModel
+{
+    public Student Student { get; set; } = new();
+
+    public string ClassGroup { get; set; } = string.Empty;
+
+    // The student's own login, if they have signed up.
+    public string? UserName { get; set; }
+}

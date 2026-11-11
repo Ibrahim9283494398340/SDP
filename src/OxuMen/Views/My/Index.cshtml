@@ -17,6 +17,15 @@
     · Group @Model.Student.ClassGroup
 </p>
 
+<div class="alert alert-light border" style="max-width: 32rem;">
+    <strong>Parent code:</strong>
+    <span class="font-monospace fs-5 ms-1">@Model.ParentCode</span>
+    <div class="small text-muted">
+        Give this code to your parent so they can create a parent account
+        and see your results.
+    </div>
+</div>
+
 <h2 class="h4 mt-4">My Reading Tasks</h2>
 
 @if (Model.Tasks.Count == 0)

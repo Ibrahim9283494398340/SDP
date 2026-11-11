@@ -9,6 +9,9 @@ public class MyPageViewModel
     public List<MyTaskViewModel> Tasks { get; set; } = new();
 
     public List<ReadingAssessment> Assessments { get; set; } = new();
+
+    // Shown so the student can give it to a parent (formatted, with dash).
+    public string ParentCode { get; set; } = string.Empty;
 }
 
 public class MyTaskViewModel

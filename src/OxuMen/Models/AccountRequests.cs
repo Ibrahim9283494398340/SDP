@@ -133,3 +133,46 @@ public class StudentRegisterRequest
     [Display(Name = "Confirm password")]
     public string ConfirmPassword { get; set; } = string.Empty;
 }
+
+// A parent signs up with the code from their child's page.
+public class ParentRegisterRequest
+{
+    [Required(ErrorMessage = "Enter your child's parent code.")]
+    [StringLength(20)]
+    [Display(Name = "Child's parent code")]
+    public string ChildCode { get; set; } = string.Empty;
+
+    [Required]
+    [RegularExpression(AccountRules.UserNamePattern,
+        ErrorMessage = AccountRules.UserNameMessage)]
+    [Display(Name = "User name")]
+    public string UserName { get; set; } = string.Empty;
+
+    [Required]
+    [DataType(DataType.Password)]
+    [StringLength(100, MinimumLength = 8,
+        ErrorMessage = "Parent passwords must be at least 8 characters.")]
+    public string Password { get; set; } = string.Empty;
+
+    [DataType(DataType.Password)]
+    [Compare(nameof(Password), ErrorMessage = "The passwords do not match.")]
+    [Display(Name = "Confirm password")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+// A signed-in parent links another child.
+public class AddChildRequest
+{
+    [Required(ErrorMessage = "Enter your child's parent code.")]
+    [StringLength(20)]
+    [Display(Name = "Child's parent code")]
+    public string ChildCode { get; set; } = string.Empty;
+}
+
+public class SendMessageRequest
+{
+    [Required(ErrorMessage = "Write a message.")]
+    [StringLength(2000, ErrorMessage = "Messages can be up to 2000 characters.")]
+    [Display(Name = "Message")]
+    public string Body { get; set; } = string.Empty;
+}

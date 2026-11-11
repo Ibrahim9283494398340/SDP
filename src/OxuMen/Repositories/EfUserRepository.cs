@@ -114,6 +114,25 @@ public class EfUserRepository : IUserRepository
                 group => SortGroups(group.Select(item => item.ClassGroup)));
     }
 
+    public async Task<List<AppUser>> GetTeachersForClassAsync(string classGroup)
+    {
+        var group = classGroup.Trim().ToUpperInvariant();
+
+        var teacherIds = await _db.TeacherClasses
+            .AsNoTracking()
+            .Where(item => item.ClassGroup == group)
+            .Select(item => item.UserId)
+            .ToListAsync();
+
+        return await _db.Users
+            .AsNoTracking()
+            .Where(user =>
+                user.Role == AppRoles.Teacher &&
+                teacherIds.Contains(user.Id))
+            .OrderBy(user => user.NormalizedUserName)
+            .ToListAsync();
+    }
+
     public async Task SetTeacherClassesAsync(
         Guid userId,
         IEnumerable<string> classGroups)

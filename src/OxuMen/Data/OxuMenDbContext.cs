@@ -22,6 +22,12 @@ public class OxuMenDbContext : DbContext
 
     public DbSet<TeacherClass> TeacherClasses => Set<TeacherClass>();
 
+    public DbSet<ParentChild> ParentChildren => Set<ParentChild>();
+
+    public DbSet<ParentCode> ParentCodes => Set<ParentCode>();
+
+    public DbSet<Message> Messages => Set<Message>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Student>(entity =>
@@ -198,6 +204,79 @@ public class OxuMenDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(item => item.ClassGroup);
+        });
+
+        // The three tables below: keep in step with
+        // UserSetup.EnsureParentTablesAsync.
+        modelBuilder.Entity<ParentChild>(entity =>
+        {
+            entity.ToTable("ParentChildren");
+            entity.HasKey(link => new { link.ParentUserId, link.StudentId });
+
+            entity.HasOne<AppUser>()
+                .WithMany()
+                .HasForeignKey(link => link.ParentUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<Student>()
+                .WithMany()
+                .HasForeignKey(link => link.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(link => link.StudentId);
+        });
+
+        modelBuilder.Entity<ParentCode>(entity =>
+        {
+            entity.ToTable("ParentCodes");
+            entity.HasKey(code => code.StudentId);
+
+            entity.Property(code => code.Code)
+                .HasMaxLength(16)
+                .IsRequired();
+
+            entity.HasIndex(code => code.Code)
+                .IsUnique();
+
+            entity.HasOne<Student>()
+                .WithMany()
+                .HasForeignKey(code => code.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.ToTable("Messages");
+            entity.HasKey(message => message.Id);
+
+            entity.Property(message => message.Body)
+                .HasMaxLength(2000)
+                .IsRequired();
+
+            entity.HasOne<Student>()
+                .WithMany()
+                .HasForeignKey(message => message.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<AppUser>()
+                .WithMany()
+                .HasForeignKey(message => message.ParentUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<AppUser>()
+                .WithMany()
+                .HasForeignKey(message => message.TeacherUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(message => new
+            {
+                message.StudentId,
+                message.ParentUserId,
+                message.TeacherUserId
+            });
+
+            entity.HasIndex(message => message.TeacherUserId);
+            entity.HasIndex(message => message.ParentUserId);
         });
     }
 }

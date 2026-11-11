@@ -8,6 +8,11 @@ public static class AppRoles
 
     public const string Student = "Student";
 
+    public const string Parent = "Parent";
+
+    // For the messages pages, which both sides of a conversation use.
+    public const string TeacherOrParent = Teacher + "," + Parent;
+
     // For [Authorize(Roles = ...)]: teacher pages are also open to admins.
     public const string TeacherOrAdmin = Teacher + "," + Admin;
 }

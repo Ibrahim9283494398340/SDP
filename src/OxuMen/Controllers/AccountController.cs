@@ -13,13 +13,16 @@ public class AccountController : Controller
 {
     private readonly IUserRepository _users;
     private readonly IStudentRepository _students;
+    private readonly IParentRepository _parents;
 
     public AccountController(
         IUserRepository users,
-        IStudentRepository students)
+        IStudentRepository students,
+        IParentRepository parents)
     {
         _users = users;
         _students = students;
+        _parents = parents;
     }
 
     [HttpGet]
@@ -176,6 +179,97 @@ public class AccountController : Controller
         TempData["SuccessMessage"] = "Your account was created. Welcome!";
 
         return RedirectToAction("Index", "My");
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult RegisterParent()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Start", "Home");
+        }
+
+        return View(new ParentRegisterRequest());
+    }
+
+    // A parent signs up with their child's parent code, which links the
+    // new account to that child. Without a valid code there is no account.
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
+    public async Task<IActionResult> RegisterParent(ParentRegisterRequest request)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Start", "Home");
+        }
+
+        Guid? studentId = null;
+
+        if (ModelState.IsValid)
+        {
+            studentId = await _parents.FindStudentByCodeAsync(request.ChildCode);
+
+            if (studentId is null)
+            {
+                ModelState.AddModelError(
+                    nameof(request.ChildCode),
+                    "That code does not match any student. Check it with " +
+                    "your child or their teacher.");
+            }
+            else if (await _users.UserNameExistsAsync(request.UserName))
+            {
+                ModelState.AddModelError(
+                    nameof(request.UserName),
+                    "That user name is already taken. Try another one.");
+            }
+        }
+
+        if (!ModelState.IsValid || studentId is null)
+        {
+            return View(new ParentRegisterRequest
+            {
+                ChildCode = request.ChildCode,
+                UserName = request.UserName
+            });
+        }
+
+        AppUser parent;
+
+        try
+        {
+            parent = await _users.CreateAsync(
+                new AppUser
+                {
+                    UserName = request.UserName,
+                    Role = AppRoles.Parent
+                },
+                request.Password);
+        }
+        catch (InvalidOperationException)
+        {
+            ModelState.AddModelError(
+                nameof(request.UserName),
+                "That user name is already taken. Try another one.");
+
+            return View(new ParentRegisterRequest
+            {
+                ChildCode = request.ChildCode,
+                UserName = request.UserName
+            });
+        }
+
+        await _parents.LinkAsync(parent.Id, studentId.Value);
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            AppClaims.CreatePrincipal(parent));
+
+        TempData["SuccessMessage"] = "Your parent account was created.";
+
+        return RedirectToAction("Index", "Parent");
     }
 
     private static StudentRegisterRequest KeepNonSecretFields(
