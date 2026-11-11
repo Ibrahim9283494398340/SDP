@@ -1,86 +1,99 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="az">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OxuMən</title>
 
-    <title>@ViewData["Title"] - OxuMen</title>
-
-    <link rel="stylesheet"
-          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
-    <link rel="stylesheet"
-          href="~/css/site.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/OxuMen.styles.css"
-          asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/OxuMen.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/oxuman-dashboard.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand"
-                   asp-area=""
-                   asp-controller="StudentPages"
-                   asp-action="Index">
-                    OxuMen
+<body class="ox-body">
+    <div class="ox-shell">
+        <aside class="ox-sidebar">
+            <a class="ox-logo" asp-controller="Home" asp-action="Index">
+                <span class="ox-logo-icon">📖</span>
+                <span>OxuMən</span>
+            </a>
+
+            <div class="ox-sidebar-caption">TƏHSİL PLATFORMASI</div>
+
+            <nav class="ox-navigation" aria-label="Əsas menyu">
+                <a class="ox-nav-link @(controller == "Home" && action == "Index" ? "ox-active" : "")"
+                   asp-controller="Home" asp-action="Index">
+                    <span>⌂</span> Ana səhifə
                 </a>
 
-                <button class="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#mainNavigation"
-                        aria-controls="mainNavigation"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <a class="ox-nav-link @(controller == "StudentPages" ? "ox-active" : "")"
+                   asp-controller="StudentPages" asp-action="Index">
+                    <span>👥</span> Şagirdlər
+                </a>
 
-                <div id="mainNavigation"
-                     class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="StudentPages"
-                               asp-action="Index">
-                                Groups
-                            </a>
-                        </li>
+                <a class="ox-nav-link @(controller == "GroupTasks" ? "ox-active" : "")"
+                   asp-controller="GroupTasks" asp-action="Index">
+                    <span>📚</span> Tapşırıqlar
+                </a>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="GroupTasks"
-                               asp-action="Index"
-                               asp-route-id="">
-                                Assessments
-                            </a>
-                        </li>
-                    </ul>
+                <a class="ox-nav-link @(controller == "AssessmentPages" ? "ox-active" : "")"
+                   asp-controller="AssessmentPages" asp-action="Index">
+                    <span>📊</span> Qiymətləndirmə
+                </a>
+            </nav>
+
+            <div class="ox-sidebar-bottom">
+                <div class="ox-help-card">
+                    <span class="ox-help-icon">💡</span>
+                    <strong>Oxumağı sevdirək!</strong>
+                    <p>Hər gün kiçik addımlarla böyük uğurlara doğru.</p>
                 </div>
+                <div class="ox-sidebar-footer">© @DateTime.Now.Year OxuMən</div>
             </div>
-        </nav>
-    </header>
+        </aside>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+        <div class="ox-workspace">
+            <header class="ox-topbar">
+                <div class="ox-topbar-heading">
+                    <button class="ox-menu-toggle" type="button"
+                            aria-label="Menyunu aç"
+                            aria-expanded="false"
+                            onclick="toggleOxMenu(this)">☰</button>
+                    <span>OxuMən Təhsil Platforması</span>
+                </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.UtcNow.Year - OxuMen
+                <div class="ox-topbar-actions">
+                    <span class="ox-topbar-date">@DateTime.Now.ToString("dd.MM.yyyy")</span>
+                    <span class="ox-user-avatar">M</span>
+                    <span class="ox-user-label">Müəllim</span>
+                </div>
+            </header>
+
+            <main class="ox-content" role="main">
+                @RenderBody()
+            </main>
         </div>
-    </footer>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+    <script>
+        function toggleOxMenu(button) {
+            const sidebar = document.querySelector('.ox-sidebar');
+            const isOpen = sidebar.classList.toggle('ox-sidebar-open');
+            button.setAttribute('aria-expanded', String(isOpen));
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+
