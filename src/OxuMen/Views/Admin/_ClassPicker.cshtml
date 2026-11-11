@@ -1,0 +1,34 @@
+@model OxuMen.ViewModels.ClassPickerViewModel
+
+@* A grid of check boxes, one per class, grouped by grade. *@
+<fieldset class="border rounded p-3 mb-3">
+    <legend class="float-none w-auto px-2 fs-6">Classes this teacher sees</legend>
+
+    @for (var grade = 1; grade <= 5; grade++)
+    {
+        <div class="mb-2">
+            <span class="me-2 text-muted">Grade @grade:</span>
+
+            @foreach (var letter in "ABCD")
+            {
+                var group = $"{grade}{letter}";
+                var id = $"class-{group}";
+
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="@id"
+                           name="@Model.FieldName"
+                           value="@group"
+                           checked="@Model.Selected.Contains(group)" />
+                    <label class="form-check-label" for="@id">@group</label>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="form-text">
+        A teacher with no classes sees no students. Two teachers can share
+        a class.
+    </div>
+</fieldset>

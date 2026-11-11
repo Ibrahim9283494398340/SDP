@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    var isTeacher = User.IsInRole(AppRoles.Teacher);
+    var isStudent = User.IsInRole(AppRoles.Student);
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -23,8 +29,8 @@
             <div class="container-fluid">
                 <a class="navbar-brand"
                    asp-area=""
-                   asp-controller="StudentPages"
-                   asp-action="Index">
+                   asp-controller="Home"
+                   asp-action="Start">
                     OxuMen
                 </a>
 
@@ -41,25 +47,79 @@
                 <div id="mainNavigation"
                      class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="StudentPages"
-                               asp-action="Index">
-                                Groups
-                            </a>
-                        </li>
+                        @if (isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="Admin"
+                                   asp-action="Teachers">
+                                    Teachers
+                                </a>
+                            </li>
+                        }
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="GroupTasks"
-                               asp-action="Index"
-                               asp-route-id="">
-                                Assessments
-                            </a>
-                        </li>
+                        @if (isTeacher || isAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="StudentPages"
+                                   asp-action="Index">
+                                    Groups
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="GroupTasks"
+                                   asp-action="Index"
+                                   asp-route-id="">
+                                    Assessments
+                                </a>
+                            </li>
+                        }
+                        else if (isStudent)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="My"
+                                   asp-action="Index">
+                                    My Page
+                                </a>
+                            </li>
+                        }
                     </ul>
+
+                    @if (isSignedIn)
+                    {
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="navbar-text text-muted small">
+                                @(User.Identity?.Name)
+                                (@(isAdmin ? "admin" : isTeacher ? "teacher" : "student"))
+                            </span>
+
+                            <a class="btn btn-sm btn-outline-secondary"
+                               asp-area=""
+                               asp-controller="Account"
+                               asp-action="ChangePassword">
+                                Change Password
+                            </a>
+
+                            <form asp-area=""
+                                  asp-controller="Account"
+                                  asp-action="Logout"
+                                  method="post"
+                                  class="d-inline">
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger">
+                                    Sign Out
+                                </button>
+                            </form>
+                        </div>
+                    }
                 </div>
             </div>
         </nav>
@@ -83,4 +143,4 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html>
+</html>

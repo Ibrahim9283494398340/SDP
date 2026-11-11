@@ -1,22 +1,40 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OxuMen.Models;
 using OxuMen.Repositories;
+using OxuMen.Security;
 
 namespace OxuMen.Controllers;
 
+// Teachers and admins, limited to the teacher's own classes.
+[Authorize(Roles = AppRoles.TeacherOrAdmin)]
 [ApiController]
 [Route("api/reading-assessments")]
 public class ReadingAssessmentsController : ControllerBase
 {
     private readonly IReadingAssessmentRepository _assessmentRepository;
     private readonly IStudentRepository _studentRepository;
+    private readonly IClassAccess _classAccess;
 
     public ReadingAssessmentsController(
         IReadingAssessmentRepository assessmentRepository,
-        IStudentRepository studentRepository)
+        IStudentRepository studentRepository,
+        IClassAccess classAccess)
     {
         _assessmentRepository = assessmentRepository;
         _studentRepository = studentRepository;
+        _classAccess = classAccess;
+    }
+
+    // The student, or null when missing or outside the teacher's classes.
+    private async Task<Student?> GetAccessibleStudentAsync(Guid id)
+    {
+        var student = await _studentRepository.GetByIdAsync(id);
+
+        return student is not null &&
+               await _classAccess.CanAccessStudentAsync(student)
+            ? student
+            : null;
     }
 
     [HttpGet("{id:guid}")]
@@ -24,7 +42,8 @@ public class ReadingAssessmentsController : ControllerBase
     {
         var assessment = await _assessmentRepository.GetByIdAsync(id);
 
-        if (assessment is null)
+        if (assessment is null ||
+            await GetAccessibleStudentAsync(assessment.StudentId) is null)
         {
             return NotFound(new { message = "Assessment not found." });
         }
@@ -36,7 +55,7 @@ public class ReadingAssessmentsController : ControllerBase
     public async Task<ActionResult<List<ReadingAssessment>>> GetForStudent(
         Guid studentId)
     {
-        var student = await _studentRepository.GetByIdAsync(studentId);
+        var student = await GetAccessibleStudentAsync(studentId);
 
         if (student is null)
         {
@@ -53,8 +72,7 @@ public class ReadingAssessmentsController : ControllerBase
     public async Task<ActionResult<ReadingAssessment>> Create(
         ReadingAssessmentRequest request)
     {
-        var student =
-            await _studentRepository.GetByIdAsync(request.StudentId);
+        var student = await GetAccessibleStudentAsync(request.StudentId);
 
         if (student is null)
         {

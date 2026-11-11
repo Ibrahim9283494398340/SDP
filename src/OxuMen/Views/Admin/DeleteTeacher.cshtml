@@ -1,0 +1,33 @@
+@model OxuMen.Models.AppUser
+
+@{
+    ViewData["Title"] = "Remove Teacher";
+}
+
+<h1>Remove Teacher</h1>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h2 class="h4">@Model.UserName</h2>
+
+        <div class="alert alert-warning">
+            This removes the teacher's account. Their classes' students,
+            tasks and results stay and remain visible to the admin and to
+            other teachers of those classes.
+        </div>
+
+        <form asp-controller="Admin"
+              asp-action="DeleteTeacher"
+              asp-route-id="@Model.Id"
+              method="post">
+
+            <button type="submit" class="btn btn-danger">
+                Remove Teacher
+            </button>
+
+            <a asp-action="Teachers" class="btn btn-outline-secondary">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>

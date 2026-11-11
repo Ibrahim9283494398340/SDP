@@ -1,3 +1,5 @@
+@model List<string>
+
 @{
     ViewData["Title"] = "Assessments";
 }
@@ -5,15 +7,21 @@
 <h1>Assessments</h1>
 <p class="text-muted">Choose a group to view or assign reading tasks.</p>
 
-@for (var grade = 1; grade <= 5; grade++)
+@if (Model.Count == 0)
 {
-    <h2 class="h5 mt-4">Grade @grade</h2>
+    <div class="alert alert-info">
+        You have no classes yet. Ask the administrator to assign your
+        classes to you.
+    </div>
+}
+
+@foreach (var grade in Model.GroupBy(group => group[0]))
+{
+    <h2 class="h5 mt-4">Grade @grade.Key</h2>
 
     <div class="row g-3">
-        @foreach (var letter in "ABCD")
+        @foreach (var group in grade)
         {
-            var group = $"{grade}{letter}";
-
             <div class="col-6 col-md-3">
                 <a asp-action="Group"
                    asp-route-group="@group"

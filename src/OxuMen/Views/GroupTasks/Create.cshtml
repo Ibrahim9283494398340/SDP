@@ -3,7 +3,10 @@
 @{
     ViewData["Title"] = "Assign Task";
 
-    var groups = OxuMen.Models.SchoolGroups.All.Select(
+    var allowedGroups = ViewData["AllowedGroups"] as IEnumerable<string>
+        ?? Enumerable.Empty<string>();
+
+    var groups = allowedGroups.Select(
         group => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
         {
             Value = group,

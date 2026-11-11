@@ -1,30 +1,41 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OxuMen.Models;
 using OxuMen.Repositories;
+using OxuMen.Security;
 using OxuMen.ViewModels;
 
 namespace OxuMen.Controllers;
 
+// Teachers and admins. A teacher only sees and assigns tasks for their own
+// classes. Students use MyController.
+[Authorize(Roles = AppRoles.TeacherOrAdmin)]
 public class GroupTasksController : Controller
 {
     private readonly IStudentRepository _students;
     private readonly IReadingAssessmentRepository _assessments;
     private readonly IGroupTaskRepository _tasks;
+    private readonly IClassAccess _classAccess;
 
     public GroupTasksController(
         IStudentRepository students,
         IReadingAssessmentRepository assessments,
-        IGroupTaskRepository tasks)
+        IGroupTaskRepository tasks,
+        IClassAccess classAccess)
     {
         _students = students;
         _assessments = assessments;
         _tasks = tasks;
+        _classAccess = classAccess;
     }
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        // The signed-in teacher's classes, in 1A..5D order.
+        var groups = (await _classAccess.GetAllowedGroupsAsync()).ToList();
+
+        return View(groups);
     }
 
     [HttpGet]
@@ -33,6 +44,11 @@ public class GroupTasksController : Controller
         if (!SchoolGroups.All.Contains(group))
         {
             return NotFound("Group not found.");
+        }
+
+        if (!await _classAccess.CanAccessGroupAsync(group))
+        {
+            return Forbid();
         }
 
         var tasks = await _tasks.GetAllAsync();
@@ -45,12 +61,19 @@ public class GroupTasksController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create(string? group)
+    public async Task<IActionResult> Create(string? group)
     {
         if (group is not null && !SchoolGroups.All.Contains(group))
         {
             return NotFound("Group not found.");
         }
+
+        if (group is not null && !await _classAccess.CanAccessGroupAsync(group))
+        {
+            return Forbid();
+        }
+
+        ViewData["AllowedGroups"] = await _classAccess.GetAllowedGroupsAsync();
 
         return View(new GroupTaskRequest
         {
@@ -62,6 +85,16 @@ public class GroupTasksController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(GroupTaskRequest request)
     {
+        ViewData["AllowedGroups"] = await _classAccess.GetAllowedGroupsAsync();
+
+        if (ModelState.IsValid &&
+            !await _classAccess.CanAccessGroupAsync(request.ClassGroup))
+        {
+            ModelState.AddModelError(
+                nameof(request.ClassGroup),
+                "You can only assign tasks to your own classes.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(request);
@@ -103,7 +136,8 @@ public class GroupTasksController : Controller
     {
         var task = await _tasks.GetByIdAsync(id);
 
-        if (task is null)
+        // A task for another teacher's class looks the same as a missing one.
+        if (task is null || !await _classAccess.CanAccessGroupAsync(task.ClassGroup))
         {
             return NotFound("Task not found.");
         }

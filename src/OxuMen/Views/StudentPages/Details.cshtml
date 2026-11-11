@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Student Details";
+    var loginUserName = ViewData["LoginUserName"] as string;
 }
 
 @if (TempData["SuccessMessage"] is string message)
@@ -35,6 +36,11 @@
             <dt class="col-sm-3">Class Group</dt>
             <dd class="col-sm-9">@Model.ClassGroup</dd>
 
+            <dt class="col-sm-3">Login</dt>
+            <dd class="col-sm-9">
+                @(loginUserName ?? "Has not created an account yet")
+            </dd>
+
             <dt class="col-sm-3">Created (UTC)</dt>
             <dd class="col-sm-9">
                 @Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")
@@ -55,6 +61,16 @@
                class="btn btn-outline-primary">
                 Assessment History
             </a>
+
+            @if (loginUserName is not null)
+            {
+                <a asp-controller="StudentLogins"
+                   asp-action="Manage"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-dark">
+                    Reset Password
+                </a>
+            }
 
             <a asp-action="Edit"
                asp-route-id="@Model.Id"

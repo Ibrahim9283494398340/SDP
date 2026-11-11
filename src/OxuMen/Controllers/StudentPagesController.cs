@@ -1,13 +1,21 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OxuMen.Models;
 using OxuMen.Repositories;
+using OxuMen.Security;
 
 namespace OxuMen.Controllers;
 
+// Teachers and admins. A teacher only sees and changes students in their
+// own classes; a student outside them looks the same as a missing one.
+// Students use MyController.
+[Authorize(Roles = AppRoles.TeacherOrAdmin)]
 public class StudentPagesController : Controller
 {
     private readonly IStudentRepository _studentRepository;
     private readonly IReadingAssessmentRepository _assessmentRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IClassAccess _classAccess;
 
     private static readonly string[] GroupNames = Enumerable.Range(1, 5)
         .SelectMany(grade => "ABCD".Select(letter => $"{grade}{letter}"))
@@ -15,10 +23,14 @@ public class StudentPagesController : Controller
 
     public StudentPagesController(
         IStudentRepository studentRepository,
-        IReadingAssessmentRepository assessmentRepository)
+        IReadingAssessmentRepository assessmentRepository,
+        IUserRepository userRepository,
+        IClassAccess classAccess)
     {
         _studentRepository = studentRepository;
         _assessmentRepository = assessmentRepository;
+        _userRepository = userRepository;
+        _classAccess = classAccess;
     }
 
     private static string GetGroupName(Student student)
@@ -30,14 +42,36 @@ public class StudentPagesController : Controller
             : group;
     }
 
+    // The student, or null when it does not exist or is not in one of
+    // the signed-in teacher's classes.
+    private async Task<Student?> GetAccessibleStudentAsync(Guid id)
+    {
+        var student = await _studentRepository.GetByIdAsync(id);
+
+        return student is not null &&
+               await _classAccess.CanAccessStudentAsync(student)
+            ? student
+            : null;
+    }
+
+    // Used by the class drop-downs on the Create and Edit forms.
+    private async Task SetAllowedGroupsAsync()
+    {
+        ViewData["AllowedGroups"] = await _classAccess.GetAllowedGroupsAsync();
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index()
     {
         var students = await _studentRepository.GetAllAsync();
+        var allowed = await _classAccess.GetAllowedGroupsAsync();
 
-        var groups = GroupNames.ToDictionary(
-            group => group,
-            group => students.Count(student => GetGroupName(student) == group));
+        // Only the signed-in teacher's classes, in 1A..5D order.
+        var groups = GroupNames
+            .Where(group => allowed.Contains(group))
+            .ToDictionary(
+                group => group,
+                group => students.Count(student => GetGroupName(student) == group));
 
         return View(groups);
     }
@@ -57,6 +91,11 @@ public class StudentPagesController : Controller
             return NotFound("Group not found.");
         }
 
+        if (!await _classAccess.CanAccessGroupAsync(group))
+        {
+            return Forbid();
+        }
+
         var students = await _studentRepository.GetAllAsync();
 
         var groupStudents = students
@@ -73,18 +112,22 @@ public class StudentPagesController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(Guid id)
     {
-        var student = await _studentRepository.GetByIdAsync(id);
+        var student = await GetAccessibleStudentAsync(id);
 
         if (student is null)
         {
             return NotFound("Student not found.");
         }
 
+        var login = await _userRepository.GetForStudentAsync(id);
+
+        ViewData["LoginUserName"] = login?.UserName;
+
         return View(student);
     }
 
     [HttpGet]
-    public IActionResult Create(string? group)
+    public async Task<IActionResult> Create(string? group)
     {
         var request = new StudentRequest();
 
@@ -97,9 +140,16 @@ public class StudentPagesController : Controller
                 return NotFound("Group not found.");
             }
 
+            if (!await _classAccess.CanAccessGroupAsync(group))
+            {
+                return Forbid();
+            }
+
             request.ClassGroup = group;
             request.GradeLevel = group[0] - '0';
         }
+
+        await SetAllowedGroupsAsync();
 
         return View(request);
     }
@@ -118,6 +168,12 @@ public class StudentPagesController : Controller
                 nameof(StudentRequest.ClassGroup),
                 "Choose a group from 1A to 5D.");
         }
+        else if (!await _classAccess.CanAccessGroupAsync(group))
+        {
+            ModelState.AddModelError(
+                nameof(StudentRequest.ClassGroup),
+                "You can only add students to your own classes.");
+        }
         else
         {
             request.ClassGroup = group;
@@ -128,6 +184,7 @@ public class StudentPagesController : Controller
 
         if (!ModelState.IsValid)
         {
+            await SetAllowedGroupsAsync();
             return View(request);
         }
 
@@ -149,7 +206,7 @@ public class StudentPagesController : Controller
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
-        var student = await _studentRepository.GetByIdAsync(id);
+        var student = await GetAccessibleStudentAsync(id);
 
         if (student is null)
         {
@@ -165,6 +222,7 @@ public class StudentPagesController : Controller
         };
 
         ViewData["StudentId"] = student.Id;
+        await SetAllowedGroupsAsync();
 
         return View(request);
     }
@@ -173,7 +231,7 @@ public class StudentPagesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, StudentRequest request)
     {
-        var existingStudent = await _studentRepository.GetByIdAsync(id);
+        var existingStudent = await GetAccessibleStudentAsync(id);
 
         if (existingStudent is null)
         {
@@ -182,8 +240,18 @@ public class StudentPagesController : Controller
 
         ViewData["StudentId"] = id;
 
+        // A teacher can only move a student into another of their classes.
+        if (!string.IsNullOrWhiteSpace(request.ClassGroup) &&
+            !await _classAccess.CanAccessGroupAsync(request.ClassGroup))
+        {
+            ModelState.AddModelError(
+                nameof(StudentRequest.ClassGroup),
+                "You can only move students into your own classes.");
+        }
+
         if (!ModelState.IsValid)
         {
+            await SetAllowedGroupsAsync();
             return View(request);
         }
 
@@ -211,7 +279,7 @@ public class StudentPagesController : Controller
     [HttpGet]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var student = await _studentRepository.GetByIdAsync(id);
+        var student = await GetAccessibleStudentAsync(id);
 
         if (student is null)
         {
@@ -230,7 +298,7 @@ public class StudentPagesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
-        var student = await _studentRepository.GetByIdAsync(id);
+        var student = await GetAccessibleStudentAsync(id);
 
         if (student is null)
         {
@@ -251,6 +319,10 @@ public class StudentPagesController : Controller
         }
 
         var group = GetGroupName(student);
+
+        // The student's login goes with the profile.
+        await _userRepository.DeleteForStudentAsync(id);
+
         var deleted = await _studentRepository.DeleteAsync(id);
 
         if (!deleted)

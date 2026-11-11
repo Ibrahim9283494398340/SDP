@@ -18,6 +18,10 @@ public class OxuMenDbContext : DbContext
 
     public DbSet<GroupTaskStudent> GroupTaskStudents => Set<GroupTaskStudent>();
 
+    public DbSet<AppUser> Users => Set<AppUser>();
+
+    public DbSet<TeacherClass> TeacherClasses => Set<TeacherClass>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Student>(entity =>
@@ -134,6 +138,66 @@ public class OxuMenDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(assessment => assessment.StudentId);
+        });
+
+        // Keep in step with UserSetup.EnsureUsersTableAsync, which creates
+        // this table on databases made before logins were added.
+        modelBuilder.Entity<AppUser>(entity =>
+        {
+            entity.ToTable("Users");
+            entity.HasKey(user => user.Id);
+
+            entity.Property(user => user.UserName)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(user => user.NormalizedUserName)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(user => user.PasswordHash)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(user => user.Role)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(user => user.SecurityStamp)
+                .HasMaxLength(64)
+                .IsRequired();
+
+            entity.HasIndex(user => user.NormalizedUserName)
+                .IsUnique();
+
+            // At most one login per student.
+            entity.HasIndex(user => user.StudentId)
+                .IsUnique();
+
+            // Deleting a student also deletes their login.
+            entity.HasOne<Student>()
+                .WithMany()
+                .HasForeignKey(user => user.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Keep in step with UserSetup.EnsureTeacherClassesTableAsync.
+        modelBuilder.Entity<TeacherClass>(entity =>
+        {
+            entity.ToTable("TeacherClasses");
+            entity.HasKey(item => new { item.UserId, item.ClassGroup });
+
+            entity.Property(item => item.ClassGroup)
+                .HasMaxLength(2)
+                .IsRequired();
+
+            // Deleting a teacher removes their class list.
+            entity.HasOne<AppUser>()
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(item => item.ClassGroup);
         });
     }
 }
