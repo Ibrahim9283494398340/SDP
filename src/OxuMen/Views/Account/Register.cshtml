@@ -1,0 +1,93 @@
+@model OxuMen.Models.StudentRegisterRequest
+
+@{
+    ViewData["Title"] = "Create Your Account";
+
+    var groups = OxuMen.Models.SchoolGroups.All.Select(
+        group => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+        {
+            Value = group,
+            Text = group
+        });
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-7 col-lg-5">
+        <h1 class="h3 mb-2">Create your student account</h1>
+        <p class="text-muted mb-4">
+            With your account you can see your reading tasks and results.
+        </p>
+
+        <form asp-controller="Account"
+              asp-action="Register"
+              method="post">
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3"
+                 role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName"
+                       class="form-control"
+                       maxlength="50"
+                       autocomplete="given-name" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName"
+                       class="form-control"
+                       maxlength="50"
+                       autocomplete="family-name" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ClassGroup" class="form-label"></label>
+                <select asp-for="ClassGroup"
+                        asp-items="groups"
+                        class="form-select">
+                    <option value="">Choose your class</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="UserName" class="form-label"></label>
+                <input asp-for="UserName"
+                       class="form-control"
+                       autocomplete="username" />
+                <div class="form-text">
+                    You will use this to sign in. Letters, digits, dots,
+                    dashes or underscores.
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password"
+                       class="form-control"
+                       autocomplete="new-password" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword" class="form-label"></label>
+                <input asp-for="ConfirmPassword"
+                       class="form-control"
+                       autocomplete="new-password" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                Create Account
+            </button>
+        </form>
+
+        <p class="mt-3">
+            Already have an account?
+            <a asp-controller="Account" asp-action="Login">Sign in</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

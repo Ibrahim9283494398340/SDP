@@ -1,0 +1,70 @@
+@model OxuMen.ViewModels.ParentHomeViewModel
+
+@{
+    ViewData["Title"] = "My Children";
+}
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+
+<h1>My Children</h1>
+
+@if (Model.Children.Count == 0)
+{
+    <div class="alert alert-info mt-3">
+        No children are linked to your account yet. Add one with their
+        parent code below.
+    </div>
+}
+else
+{
+    <div class="row g-3 mt-1 mb-4">
+        @foreach (var child in Model.Children)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5">@child.FirstName @child.LastName</h2>
+                        <p class="text-muted">
+                            Grade @child.GradeLevel · Group @child.ClassGroup
+                        </p>
+
+                        <a asp-controller="Parent"
+                           asp-action="Child"
+                           asp-route-id="@child.Id"
+                           class="btn btn-primary btn-sm">
+                            Results &amp; Teachers
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="card mt-4" style="max-width: 32rem;">
+    <div class="card-body">
+        <h2 class="h6">Add another child</h2>
+
+        <form asp-controller="Parent"
+              asp-action="AddChild"
+              method="post">
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-2"
+                 role="alert"></div>
+
+            <div class="input-group">
+                <input asp-for="AddChild.ChildCode"
+                       class="form-control text-uppercase"
+                       placeholder="Parent code, e.g. ABCD-1234"
+                       autocomplete="off" />
+                <button type="submit" class="btn btn-outline-primary">
+                    Add Child
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

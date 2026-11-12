@@ -1,0 +1,150 @@
+@model OxuMen.ViewModels.ParentChildViewModel
+
+@{
+    ViewData["Title"] = $"{Model.Student.FirstName} {Model.Student.LastName}";
+}
+
+<h1>@Model.Student.FirstName @Model.Student.LastName</h1>
+
+<p class="text-muted">
+    Grade @Model.Student.GradeLevel · Group @Model.Student.ClassGroup
+</p>
+
+<a asp-controller="Parent"
+   asp-action="Index"
+   class="btn btn-outline-secondary mb-4">
+    Back to My Children
+</a>
+
+<h2 class="h4">Teachers</h2>
+
+@if (Model.Teachers.Count == 0)
+{
+    <div class="alert alert-info">
+        No teacher is assigned to group @Model.Student.ClassGroup yet.
+    </div>
+}
+else
+{
+    <ul class="list-group mb-4" style="max-width: 32rem;">
+        @foreach (var teacher in Model.Teachers)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>@teacher.UserName</span>
+
+                <a asp-controller="Messages"
+                   asp-action="Conversation"
+                   asp-route-studentId="@Model.Student.Id"
+                   asp-route-otherUserId="@teacher.Id"
+                   class="btn btn-sm btn-outline-primary">
+                    Message Teacher
+                </a>
+            </li>
+        }
+    </ul>
+}
+
+<h2 class="h4">Reading Tasks</h2>
+
+@if (Model.Tasks.Count == 0)
+{
+    <div class="alert alert-info">No reading tasks yet.</div>
+}
+else
+{
+    <div class="table-responsive mb-4">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Text</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Tasks)
+                {
+                    <tr>
+                        <td>@item.Task.TextReference</td>
+                        <td>@item.Task.Kind</td>
+                        <td>
+                            @if (item.Assessment is not null)
+                            {
+                                <span class="badge bg-success">Done</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Not done yet</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h2 class="h4">Results and Teacher Notes</h2>
+
+@if (Model.Assessments.Count == 0)
+{
+    <div class="alert alert-info">No results yet.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <caption>Newest first. Each measure is shown separately.</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Date (UTC)</th>
+                    <th scope="col">Text</th>
+                    <th scope="col">Correct words/min</th>
+                    <th scope="col">Accuracy</th>
+                    <th scope="col">Comprehension</th>
+                    <th scope="col">Teacher note</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var assessment in Model.Assessments)
+                {
+                    <tr>
+                        <td>@assessment.AssessedAtUtc.ToUniversalTime().ToString("yyyy-MM-dd")</td>
+                        <td>@assessment.TextReference</td>
+                        <td>@(assessment.CorrectWordsPerMinute?.ToString("0.##") ?? "N/A")</td>
+                        <td>
+                            @(assessment.AccuracyPercentage.HasValue
+                                ? assessment.AccuracyPercentage.Value.ToString("0.##") + "%"
+                                : "N/A")
+                        </td>
+                        <td>
+                            @if (assessment.ComprehensionTotalQuestions.HasValue)
+                            {
+                                <span>
+                                    @assessment.ComprehensionCorrectAnswers /
+                                    @assessment.ComprehensionTotalQuestions
+                                </span>
+                            }
+                            else
+                            {
+                                <span>Not assessed</span>
+                            }
+                        </td>
+                        <td>
+                            @(string.IsNullOrWhiteSpace(assessment.Notes) ? "—" : "Yes")
+                        </td>
+                        <td>
+                            <a asp-controller="Parent"
+                               asp-action="Result"
+                               asp-route-id="@assessment.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

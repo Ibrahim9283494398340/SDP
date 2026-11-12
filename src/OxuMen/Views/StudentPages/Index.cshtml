@@ -16,15 +16,21 @@
     <p class="text-muted">Select a group to view its students.</p>
 </div>
 
-@for (var grade = 1; grade <= 5; grade++)
+@if (Model.Count == 0)
 {
-    <h2 class="h5 mb-3">Grade @grade</h2>
+    <div class="alert alert-info">
+        You have no classes yet. Ask the administrator to assign your
+        classes to you.
+    </div>
+}
+
+@foreach (var grade in Model.Keys.GroupBy(group => group[0]))
+{
+    <h2 class="h5 mb-3">Grade @grade.Key</h2>
 
     <div class="row g-3 mb-4">
-        @foreach (var letter in "ABCD")
+        @foreach (var groupName in grade)
         {
-            var groupName = $"{grade}{letter}";
-
             <div class="col-6 col-md-3">
                 <a asp-controller="StudentPages"
                    asp-action="Group"

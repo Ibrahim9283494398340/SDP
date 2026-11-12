@@ -1,7 +1,33 @@
-﻿
+@inject OxuMen.Repositories.IMessageRepository MessageRepository
+
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole(AppRoles.Admin);
+    var isTeacher = User.IsInRole(AppRoles.Teacher);
+    var isStudent = User.IsInRole(AppRoles.Student);
+    var isParent = User.IsInRole(AppRoles.Parent);
+
+    var unreadMessages = 0;
+
+    if ((isTeacher || isParent) &&
+        OxuMen.Security.AppClaims.GetUserId(User) is Guid layoutUserId)
+    {
+        unreadMessages = await MessageRepository.CountUnreadAsync(layoutUserId);
+    }
+
+    var displayName = User.Identity?.Name ?? "";
+    var avatarText = string.IsNullOrWhiteSpace(displayName)
+        ? "?"
+        : displayName.Trim().Substring(0, 1).ToUpperInvariant();
+
+    var roleLabel = isAdmin ? "Administrator"
+        : isTeacher ? "Müəllim"
+        : isParent ? "Valideyn"
+        : isStudent ? "Şagird"
+        : "İstifadəçi";
 }
 
 <!DOCTYPE html>
@@ -18,8 +44,11 @@
 </head>
 <body class="ox-body">
     <div class="ox-shell">
-        <aside class="ox-sidebar">
-            <a class="ox-logo" asp-controller="Home" asp-action="Index">
+        <aside class="ox-sidebar" id="oxSidebar">
+            <a class="ox-logo"
+               asp-area=""
+               asp-controller="Home"
+               asp-action="Start">
                 <span class="ox-logo-icon">📖</span>
                 <span>OxuMən</span>
             </a>
@@ -27,25 +56,89 @@
             <div class="ox-sidebar-caption">TƏHSİL PLATFORMASI</div>
 
             <nav class="ox-navigation" aria-label="Əsas menyu">
-                <a class="ox-nav-link @(controller == "Home" && action == "Index" ? "ox-active" : "")"
-                   asp-controller="Home" asp-action="Index">
+                <a class="ox-nav-link @(controller == "Home" && (action == "Index" || action == "Start") ? "ox-active" : "")"
+                   asp-area=""
+                   asp-controller="Home"
+                   asp-action="Start">
                     <span>⌂</span> Ana səhifə
                 </a>
 
-                <a class="ox-nav-link @(controller == "StudentPages" ? "ox-active" : "")"
-                   asp-controller="StudentPages" asp-action="Index">
-                    <span>👥</span> Şagirdlər
-                </a>
+                @if (isAdmin)
+                {
+                    <a class="ox-nav-link @(controller == "Admin" && action == "Teachers" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Admin"
+                       asp-action="Teachers">
+                        <span>👩‍🏫</span> Müəllimlər
+                    </a>
 
-                <a class="ox-nav-link @(controller == "GroupTasks" ? "ox-active" : "")"
-                   asp-controller="GroupTasks" asp-action="Index">
-                    <span>📚</span> Tapşırıqlar
-                </a>
+                    <a class="ox-nav-link @(controller == "Admin" && action == "Students" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Admin"
+                       asp-action="Students">
+                        <span>👥</span> Şagirdlər
+                    </a>
+                }
 
-                <a class="ox-nav-link @(controller == "AssessmentPages" ? "ox-active" : "")"
-                   asp-controller="AssessmentPages" asp-action="Index">
-                    <span>📊</span> Qiymətləndirmə
-                </a>
+                @if (isTeacher || isAdmin)
+                {
+                    <a class="ox-nav-link @(controller == "StudentPages" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="StudentPages"
+                       asp-action="Index">
+                        <span>👥</span> Qruplar
+                    </a>
+
+                    <a class="ox-nav-link @(controller == "GroupTasks" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="GroupTasks"
+                       asp-action="Index"
+                       asp-route-id="">
+                        <span>📚</span> Tapşırıqlar
+                    </a>
+
+                    <a class="ox-nav-link @(controller == "AssessmentPages" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="AssessmentPages"
+                       asp-action="Index">
+                        <span>📊</span> Qiymətləndirmə
+                    </a>
+                }
+                else if (isStudent)
+                {
+                    <a class="ox-nav-link @(controller == "My" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="My"
+                       asp-action="Index">
+                        <span>👤</span> Mənim səhifəm
+                    </a>
+                }
+                else if (isParent)
+                {
+                    <a class="ox-nav-link @(controller == "Parent" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Parent"
+                       asp-action="Index">
+                        <span>👨‍👩‍👧‍👦</span> Övladlarım
+                    </a>
+                }
+
+                @if (isTeacher || isParent)
+                {
+                    <a class="ox-nav-link @(controller == "Messages" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Messages"
+                       asp-action="Index">
+                        <span>✉</span> Mesajlar
+
+                        @if (unreadMessages > 0)
+                        {
+                            <span class="badge bg-primary ms-auto">
+                                @unreadMessages
+                            </span>
+                        }
+                    </a>
+                }
             </nav>
 
             <div class="ox-sidebar-bottom">
@@ -54,24 +147,60 @@
                     <strong>Oxumağı sevdirək!</strong>
                     <p>Hər gün kiçik addımlarla böyük uğurlara doğru.</p>
                 </div>
-                <div class="ox-sidebar-footer">© @DateTime.Now.Year OxuMən</div>
+
+                <div class="ox-sidebar-footer">
+                    © @DateTime.Now.Year OxuMən
+                </div>
             </div>
         </aside>
 
         <div class="ox-workspace">
             <header class="ox-topbar">
                 <div class="ox-topbar-heading">
-                    <button class="ox-menu-toggle" type="button"
+                    <button class="ox-menu-toggle"
+                            type="button"
                             aria-label="Menyunu aç"
+                            aria-controls="oxSidebar"
                             aria-expanded="false"
-                            onclick="toggleOxMenu(this)">☰</button>
+                            onclick="toggleOxMenu(this)">
+                        ☰
+                    </button>
+
                     <span>OxuMən Təhsil Platforması</span>
                 </div>
 
-                <div class="ox-topbar-actions">
-                    <span class="ox-topbar-date">@DateTime.Now.ToString("dd.MM.yyyy")</span>
-                    <span class="ox-user-avatar">M</span>
-                    <span class="ox-user-label">Müəllim</span>
+                <div class="ox-topbar-actions d-flex flex-wrap align-items-center gap-2">
+                    <span class="ox-topbar-date">
+                        @DateTime.Now.ToString("dd.MM.yyyy")
+                    </span>
+
+                    @if (isSignedIn)
+                    {
+                        <span class="ox-user-avatar">@avatarText</span>
+
+                        <span class="ox-user-label">
+                            @displayName (@roleLabel)
+                        </span>
+
+                        <a class="btn btn-sm btn-outline-secondary"
+                           asp-area=""
+                           asp-controller="Account"
+                           asp-action="ChangePassword">
+                            Şifrəni dəyiş
+                        </a>
+
+                        <form asp-area=""
+                              asp-controller="Account"
+                              asp-action="Logout"
+                              method="post"
+                              asp-antiforgery="true"
+                              class="d-inline">
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger">
+                                Çıxış
+                            </button>
+                        </form>
+                    }
                 </div>
             </header>
 
@@ -87,13 +216,22 @@
 
     <script>
         function toggleOxMenu(button) {
-            const sidebar = document.querySelector('.ox-sidebar');
+            const sidebar = document.getElementById('oxSidebar');
+
+            if (!sidebar) {
+                return;
+            }
+
             const isOpen = sidebar.classList.toggle('ox-sidebar-open');
+
             button.setAttribute('aria-expanded', String(isOpen));
+            button.setAttribute(
+                'aria-label',
+                isOpen ? 'Menyunu bağla' : 'Menyunu aç'
+            );
         }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-

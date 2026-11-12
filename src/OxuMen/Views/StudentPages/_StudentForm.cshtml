@@ -1,5 +1,11 @@
 @model OxuMen.Models.StudentRequest
 
+@{
+    // Only the signed-in teacher's classes can be chosen.
+    var allowedGroups = ViewData["AllowedGroups"] as IEnumerable<string>
+        ?? Enumerable.Empty<string>();
+}
+
 <div asp-validation-summary="All"
      class="text-danger"
      role="alert">
@@ -62,13 +68,11 @@
             required>
         <option value="">Select a class group</option>
 
-        @for (var grade = 1; grade <= 5; grade++)
+        @foreach (var grade in allowedGroups.GroupBy(group => group[0]))
         {
-            <optgroup label="Grade @grade">
-                @foreach (var letter in new[] { "A", "B", "C", "D" })
+            <optgroup label="Grade @grade.Key">
+                @foreach (var group in grade)
                 {
-                    var group = $"{grade}{letter}";
-
                     <option value="@group">@group</option>
                 }
             </optgroup>
