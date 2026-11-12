@@ -1,12 +1,15 @@
-﻿@inject OxuMen.Repositories.IMessageRepository MessageRepository
+@inject OxuMen.Repositories.IMessageRepository MessageRepository
+
 @{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
     var isSignedIn = User.Identity?.IsAuthenticated == true;
     var isAdmin = User.IsInRole(AppRoles.Admin);
     var isTeacher = User.IsInRole(AppRoles.Teacher);
     var isStudent = User.IsInRole(AppRoles.Student);
     var isParent = User.IsInRole(AppRoles.Parent);
 
-    // Unread messages, shown next to "Messages" for teachers and parents.
     var unreadMessages = 0;
 
     if ((isTeacher || isParent) &&
@@ -14,193 +17,221 @@
     {
         unreadMessages = await MessageRepository.CountUnreadAsync(layoutUserId);
     }
+
+    var displayName = User.Identity?.Name ?? "";
+    var avatarText = string.IsNullOrWhiteSpace(displayName)
+        ? "?"
+        : displayName.Trim().Substring(0, 1).ToUpperInvariant();
+
+    var roleLabel = isAdmin ? "Administrator"
+        : isTeacher ? "Müəllim"
+        : isParent ? "Valideyn"
+        : isStudent ? "Şagird"
+        : "İstifadəçi";
 }
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="az">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OxuMən</title>
 
-    <title>@ViewData["Title"] - OxuMen</title>
-
-    <link rel="stylesheet"
-          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
-    <link rel="stylesheet"
-          href="~/css/site.css"
-          asp-append-version="true" />
-
-    <link rel="stylesheet"
-          href="~/OxuMen.styles.css"
-          asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/OxuMen.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/oxuman-dashboard.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand"
+<body class="ox-body">
+    <div class="ox-shell">
+        <aside class="ox-sidebar" id="oxSidebar">
+            <a class="ox-logo"
+               asp-area=""
+               asp-controller="Home"
+               asp-action="Start">
+                <span class="ox-logo-icon">📖</span>
+                <span>OxuMən</span>
+            </a>
+
+            <div class="ox-sidebar-caption">TƏHSİL PLATFORMASI</div>
+
+            <nav class="ox-navigation" aria-label="Əsas menyu">
+                <a class="ox-nav-link @(controller == "Home" && (action == "Index" || action == "Start") ? "ox-active" : "")"
                    asp-area=""
                    asp-controller="Home"
                    asp-action="Start">
-                    OxuMen
+                    <span>⌂</span> Ana səhifə
                 </a>
 
-                <button class="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#mainNavigation"
-                        aria-controls="mainNavigation"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                @if (isAdmin)
+                {
+                    <a class="ox-nav-link @(controller == "Admin" && action == "Teachers" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Admin"
+                       asp-action="Teachers">
+                        <span>👩‍🏫</span> Müəllimlər
+                    </a>
 
-                <div id="mainNavigation"
-                     class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        @if (isAdmin)
+                    <a class="ox-nav-link @(controller == "Admin" && action == "Students" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Admin"
+                       asp-action="Students">
+                        <span>👥</span> Şagirdlər
+                    </a>
+                }
+
+                @if (isTeacher || isAdmin)
+                {
+                    <a class="ox-nav-link @(controller == "StudentPages" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="StudentPages"
+                       asp-action="Index">
+                        <span>👥</span> Qruplar
+                    </a>
+
+                    <a class="ox-nav-link @(controller == "GroupTasks" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="GroupTasks"
+                       asp-action="Index"
+                       asp-route-id="">
+                        <span>📚</span> Tapşırıqlar
+                    </a>
+
+                    <a class="ox-nav-link @(controller == "AssessmentPages" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="AssessmentPages"
+                       asp-action="Index">
+                        <span>📊</span> Qiymətləndirmə
+                    </a>
+                }
+                else if (isStudent)
+                {
+                    <a class="ox-nav-link @(controller == "My" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="My"
+                       asp-action="Index">
+                        <span>👤</span> Mənim səhifəm
+                    </a>
+                }
+                else if (isParent)
+                {
+                    <a class="ox-nav-link @(controller == "Parent" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Parent"
+                       asp-action="Index">
+                        <span>👨‍👩‍👧‍👦</span> Övladlarım
+                    </a>
+                }
+
+                @if (isTeacher || isParent)
+                {
+                    <a class="ox-nav-link @(controller == "Messages" ? "ox-active" : "")"
+                       asp-area=""
+                       asp-controller="Messages"
+                       asp-action="Index">
+                        <span>✉</span> Mesajlar
+
+                        @if (unreadMessages > 0)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Admin"
-                                   asp-action="Teachers">
-                                    Teachers
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Admin"
-                                   asp-action="Students">
-                                    Students
-                                </a>
-                            </li>
+                            <span class="badge bg-primary ms-auto">
+                                @unreadMessages
+                            </span>
                         }
+                    </a>
+                }
+            </nav>
 
-                        @if (isTeacher || isAdmin)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="StudentPages"
-                                   asp-action="Index">
-                                    Groups
-                                </a>
-                            </li>
+            <div class="ox-sidebar-bottom">
+                <div class="ox-help-card">
+                    <span class="ox-help-icon">💡</span>
+                    <strong>Oxumağı sevdirək!</strong>
+                    <p>Hər gün kiçik addımlarla böyük uğurlara doğru.</p>
+                </div>
 
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="GroupTasks"
-                                   asp-action="Index"
-                                   asp-route-id="">
-                                    Assessments
-                                </a>
-                            </li>
+                <div class="ox-sidebar-footer">
+                    © @DateTime.Now.Year OxuMən
+                </div>
+            </div>
+        </aside>
 
-                            if (isTeacher)
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark"
-                                       asp-area=""
-                                       asp-controller="Messages"
-                                       asp-action="Index">
-                                        Messages
-                                        @if (unreadMessages > 0)
-                                        {
-                                            <span class="badge bg-primary">@unreadMessages</span>
-                                        }
-                                    </a>
-                                </li>
-                            }
-                        }
-                        else if (isStudent)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="My"
-                                   asp-action="Index">
-                                    My Page
-                                </a>
-                            </li>
-                        }
-                        else if (isParent)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Parent"
-                                   asp-action="Index">
-                                    My Children
-                                </a>
-                            </li>
+        <div class="ox-workspace">
+            <header class="ox-topbar">
+                <div class="ox-topbar-heading">
+                    <button class="ox-menu-toggle"
+                            type="button"
+                            aria-label="Menyunu aç"
+                            aria-controls="oxSidebar"
+                            aria-expanded="false"
+                            onclick="toggleOxMenu(this)">
+                        ☰
+                    </button>
 
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Messages"
-                                   asp-action="Index">
-                                    Messages
-                                    @if (unreadMessages > 0)
-                                    {
-                                        <span class="badge bg-primary">@unreadMessages</span>
-                                    }
-                                </a>
-                            </li>
-                        }
-                    </ul>
+                    <span>OxuMən Təhsil Platforması</span>
+                </div>
+
+                <div class="ox-topbar-actions d-flex flex-wrap align-items-center gap-2">
+                    <span class="ox-topbar-date">
+                        @DateTime.Now.ToString("dd.MM.yyyy")
+                    </span>
 
                     @if (isSignedIn)
                     {
-                        <div class="d-flex flex-wrap align-items-center gap-2">
-                            <span class="navbar-text text-muted small">
-                                @(User.Identity?.Name)
-                                (@(isAdmin ? "admin" : isTeacher ? "teacher" : isParent ? "parent" : "student"))
-                            </span>
+                        <span class="ox-user-avatar">@avatarText</span>
 
-                            <a class="btn btn-sm btn-outline-secondary"
-                               asp-area=""
-                               asp-controller="Account"
-                               asp-action="ChangePassword">
-                                Change Password
-                            </a>
+                        <span class="ox-user-label">
+                            @displayName (@roleLabel)
+                        </span>
 
-                            <form asp-area=""
-                                  asp-controller="Account"
-                                  asp-action="Logout"
-                                  method="post"
-                                  class="d-inline">
-                                <button type="submit"
-                                        class="btn btn-sm btn-outline-danger">
-                                    Sign Out
-                                </button>
-                            </form>
-                        </div>
+                        <a class="btn btn-sm btn-outline-secondary"
+                           asp-area=""
+                           asp-controller="Account"
+                           asp-action="ChangePassword">
+                            Şifrəni dəyiş
+                        </a>
+
+                        <form asp-area=""
+                              asp-controller="Account"
+                              asp-action="Logout"
+                              method="post"
+                              asp-antiforgery="true"
+                              class="d-inline">
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger">
+                                Çıxış
+                            </button>
+                        </form>
                     }
                 </div>
-            </div>
-        </nav>
-    </header>
+            </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.UtcNow.Year - OxuMen
+            <main class="ox-content" role="main">
+                @RenderBody()
+            </main>
         </div>
-    </footer>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
+    <script>
+        function toggleOxMenu(button) {
+            const sidebar = document.getElementById('oxSidebar');
+
+            if (!sidebar) {
+                return;
+            }
+
+            const isOpen = sidebar.classList.toggle('ox-sidebar-open');
+
+            button.setAttribute('aria-expanded', String(isOpen));
+            button.setAttribute(
+                'aria-label',
+                isOpen ? 'Menyunu bağla' : 'Menyunu aç'
+            );
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html>
+</html>

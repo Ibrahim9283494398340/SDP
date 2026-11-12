@@ -1,6 +1,9 @@
-﻿@{
-    ViewData["Title"] = "Teacher Dashboard";
+﻿
+@{
+    ViewData["Title"] = "Müəllim Paneli";
 
+    // Demo values from the existing homepage.
+    // These are not yet connected to stored assessment data.
     var students = new[]
     {
         new { Name = "Aylin M.", Speed = 62, Accuracy = 94, Comprehension = 7 },
@@ -8,128 +11,200 @@
         new { Name = "Zahra K.", Speed = 71, Accuracy = 97, Comprehension = 8 },
         new { Name = "Murad H.", Speed = 36, Accuracy = 82, Comprehension = 4 }
     };
+
+    var averageAccuracy = students.Average(s => s.Accuracy);
+    var averageSpeed = students.Average(s => s.Speed);
 }
 
-<section class="welcome" aria-labelledby="welcome-title">
+<div class="ox-page-heading">
     <div>
-        <p class="eyebrow">TEACHER DASHBOARD</p>
-        <h1 id="welcome-title">Welcome back!</h1>
-        <p>Follow every student's reading journey.</p>
+        <div class="ox-eyebrow">MÜƏLLİM PANELİ</div>
+        <h1>Xoş gəlmisiniz! 👋</h1>
+        <p>Şagirdlərinizin oxu bacarıqlarını izləyin və inkişafına dəstək olun.</p>
+    </div>
+    <span class="ox-role-tag">👩‍🏫 Müəllim</span>
+</div>
 
-        <a class="primary-link" href="#students">
-            View student results →
+<section class="ox-hero">
+    <div class="ox-hero-text">
+        <span class="ox-hero-tag">✨ OxuMən ilə öyrənmək daha əyləncəlidir</span>
+        <h2>Hər şagirdin uğur hekayəsi burada başlayır!</h2>
+        <p>
+            Oxu sürəti, düzgünlük və anlama bacarıqlarını
+            bir yerdən izləyin.
+        </p>
+        <a class="ox-hero-button" asp-controller="StudentPages" asp-action="Index">
+            Şagirdlərə bax →
         </a>
     </div>
-
-    <div class="welcome-icon" aria-hidden="true">📚</div>
+    <div class="ox-hero-art" aria-hidden="true">
+        <span class="ox-floating-star">⭐</span>
+        <span class="ox-hero-book">📚</span>
+        <span class="ox-floating-pencil">✏️</span>
+    </div>
 </section>
 
-<section class="stats" aria-label="Class overview">
-    <article class="stat-card">
-        <span>Students</span>
-        <strong>@students.Length</strong>
-        <small>Class roster</small>
-    </article>
-
-    <article class="stat-card">
-        <span>Grade Level</span>
-        <strong>Grade 3</strong>
-        <small>Primary school</small>
-    </article>
-
-    <article class="stat-card">
-        <span>Reading Metrics</span>
-        <strong>3</strong>
-        <small>Speed, accuracy, and comprehension</small>
-    </article>
-</section>
-
-<section id="students" class="panel" aria-labelledby="students-title">
-    <div class="section-heading">
+<section class="ox-section">
+    <div class="ox-section-heading">
         <div>
-            <p class="eyebrow">CLASS OVERVIEW</p>
-            <h2 id="students-title">Student Results</h2>
+            <span class="ox-eyebrow">ÜMUMİ GÖSTƏRİCİLƏR</span>
+            <h2>Sinifin nəticələri</h2>
+        </div>
+        <span class="ox-pill">3-cü sinif · Nümunə məlumatlar</span>
+    </div>
+
+    <div class="ox-stats-grid">
+        <article class="ox-stat-card">
+            <div class="ox-stat-icon ox-blue">👥</div>
+            <span>Şagird sayı</span>
+            <strong>@students.Length</strong>
+            <small>Sinifdəki şagirdlər</small>
+        </article>
+
+        <article class="ox-stat-card">
+            <div class="ox-stat-icon ox-green">📖</div>
+            <span>Orta oxu sürəti</span>
+            <strong>@averageSpeed.ToString("0")</strong>
+            <small>Söz / dəqiqə</small>
+        </article>
+
+        <article class="ox-stat-card">
+            <div class="ox-stat-icon ox-purple">🎯</div>
+            <span>Orta düzgünlük</span>
+            <strong>@averageAccuracy.ToString("0")%</strong>
+            <small>Oxu dəqiqliyi</small>
+        </article>
+
+        <article class="ox-stat-card">
+            <div class="ox-stat-icon ox-orange">🏆</div>
+            <span>Sinif səviyyəsi</span>
+            <strong>3</strong>
+            <small>İbtidai təhsil</small>
+        </article>
+    </div>
+</section>
+
+<section class="ox-section">
+    <div class="ox-section-heading">
+        <div>
+            <span class="ox-eyebrow">TƏDRİS PROSESİ</span>
+            <h2>İdarəetmə paneli</h2>
+        </div>
+    </div>
+
+    <div class="ox-feature-grid">
+        <a class="ox-feature-card" asp-controller="StudentPages" asp-action="Index">
+            <div class="ox-feature-art ox-feature-blue">👩‍🎓</div>
+            <div class="ox-feature-body">
+                <h3>Şagirdlər</h3>
+                <p>Şagird profillərinə və qruplara baxın.</p>
+                <span>İdarə et →</span>
+            </div>
+        </a>
+
+        <a class="ox-feature-card" asp-controller="GroupTasks" asp-action="Index">
+            <div class="ox-feature-art ox-feature-purple">📝</div>
+            <div class="ox-feature-body">
+                <h3>Tapşırıqlar</h3>
+                <p>Qrup tapşırıqlarını idarə edin.</p>
+                <span>Tapşırıqlara bax →</span>
+            </div>
+        </a>
+
+        <a class="ox-feature-card" asp-controller="AssessmentPages" asp-action="Index">
+            <div class="ox-feature-art ox-feature-orange">📊</div>
+            <div class="ox-feature-body">
+                <h3>Qiymətləndirmə</h3>
+                <p>Oxu bacarıqlarını qiymətləndirin.</p>
+                <span>Nəticələrə bax →</span>
+            </div>
+        </a>
+    </div>
+</section>
+
+<div class="ox-bottom-grid">
+    <section class="ox-panel">
+        <div class="ox-section-heading">
+            <div>
+                <span class="ox-eyebrow">OXU NƏTİCƏLƏRİ</span>
+                <h2>Şagirdlərin göstəriciləri</h2>
+            </div>
         </div>
 
-        <span class="chip">Grade 3</span>
-    </div>
-
-    <div class="table-scroll"
-         tabindex="0"
-         role="region"
-         aria-label="Student results table">
-        <table>
-            <caption>
-                Reading assessment — each metric is reported separately.
-            </caption>
-
-            <thead>
-                <tr>
-                    <th scope="col">Student</th>
-                    <th scope="col">Reading Speed</th>
-                    <th scope="col">Accuracy</th>
-                    <th scope="col">Comprehension</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var student in students)
-                {
+        <div class="ox-table-scroll">
+            <table class="ox-table">
+                <thead>
                     <tr>
-                        <th scope="row">
-                            <span class="avatar" aria-hidden="true">
-                                @student.Name.Substring(0, 1)
-                            </span>
-                            @student.Name
-                        </th>
-
-                        <td>
-                            <strong>@student.Speed</strong>
-                            <span class="unit">words/min</span>
-                        </td>
-
-                        <td>@student.Accuracy%</td>
-                        <td>@student.Comprehension / 10</td>
+                        <th>Şagird</th>
+                        <th>Oxu sürəti</th>
+                        <th>Düzgünlük</th>
+                        <th>Anlama</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <p class="table-note">
-        These figures do not establish a diagnosis or automatically determine
-        a support level. Results require teacher review.
-    </p>
-</section>
-
-<div class="bottom-grid">
-    <section id="workflow"
-             class="panel"
-             aria-labelledby="workflow-title">
-        <p class="eyebrow">STEP-BY-STEP SUPPORT</p>
-        <h2 id="workflow-title">The Student Learning Journey</h2>
-
-        <ol class="workflow">
-            <li>Create a student profile</li>
-            <li>Complete an initial assessment and review results</li>
-            <li>Develop a personalized plan approved by the teacher</li>
-            <li>Practice with teacher support</li>
-            <li>Reassess skills and report progress</li>
-        </ol>
-    </section>
-
-    <section class="panel guidance" aria-labelledby="guidance-title">
-        <span class="guidance-icon" aria-hidden="true">💡</span>
-        <h2 id="guidance-title">Teachers Guide Every Decision</h2>
-
-        <p>
-            Reading speed, accuracy, and comprehension are tracked separately.
-            Personalized support plans are informed by teacher observations.
-        </p>
-
-        <p>
-            When AI recommendations are introduced, they will require
-            teacher approval before being applied.
+                </thead>
+                <tbody>
+                    @foreach (var student in students)
+                    {
+                        <tr>
+                            <td>
+                                <span class="ox-table-avatar">
+                                    @student.Name.Substring(0, 1)
+                                </span>
+                                @student.Name
+                            </td>
+                            <td>@student.Speed söz/dəq</td>
+                            <td>
+                                <div class="ox-progress-value">@student.Accuracy%</div>
+                                <div class="ox-progress-track">
+                                    <div class="ox-progress-fill"
+                                         style="width: @(student.Accuracy)%"></div>
+                                </div>
+                            </td>
+                            <td>@student.Comprehension / 10</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="ox-data-note">
+            Bu göstəricilər nümunə məlumatlardır.
+            Nəticələr müəllim tərəfindən qiymətləndirilməlidir.
         </p>
     </section>
+
+    <aside class="ox-panel ox-goals-panel">
+        <span class="ox-eyebrow">ÖYRƏNMƏ YOLU</span>
+        <h2>İnkişaf addımları</h2>
+
+        <div class="ox-goal-item">
+            <span class="ox-goal-number">1</span>
+            <div>
+                <strong>Şagird profili</strong>
+                <p>Şagird haqqında məlumat yaradın.</p>
+            </div>
+        </div>
+
+        <div class="ox-goal-item">
+            <span class="ox-goal-number">2</span>
+            <div>
+                <strong>İlkin qiymətləndirmə</strong>
+                <p>Oxu bacarıqlarını yoxlayın.</p>
+            </div>
+        </div>
+
+        <div class="ox-goal-item">
+            <span class="ox-goal-number">3</span>
+            <div>
+                <strong>Fərdi inkişaf planı</strong>
+                <p>Müəllim təsdiqi ilə plan hazırlayın.</p>
+            </div>
+        </div>
+
+        <div class="ox-goal-item">
+            <span class="ox-goal-number">4</span>
+            <div>
+                <strong>İnkişafı izləyin</strong>
+                <p>Təkrar qiymətləndirmə aparın.</p>
+            </div>
+        </div>
+    </aside>
 </div>
