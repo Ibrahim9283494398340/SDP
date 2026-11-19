@@ -22,8 +22,8 @@ Every page needs a signed-in user. There are four roles:
 
 | Role    | Can see and do |
 |---------|----------------|
-| Admin   | Manages teachers on the **Teachers** page: creates them, chooses which classes each one has, removes them. Sees every student on the **Students** page and can move a student to another class there. The admin cannot change a teacher's password; teachers change their own under **Change Password**. Can also see and work in every class. |
-| Teacher | Only **their own classes** (chosen by the admin): those groups, their students, tasks and results, and the same through `/api`. Other classes do not appear in lists or drop-downs, and opening one directly shows *Access Denied* or *Not Found*. A teacher with no classes sees nothing. Can reset the password of a student in their classes. |
+| Admin   | Manages teachers on the **Teachers** page: creates them, chooses which classes each one has, removes them. Sees every student on the **Students** page and can move a student to another class there. The admin cannot change a teacher's password; teachers change their own under **Change Password**. Can also see and work in every class, and *Ana səhifə* shows the dashboard for all classes. |
+| Teacher | Starts on the **dashboard** (*Ana səhifə*), which shows student, task and result totals and the latest results for their classes only. Only **their own classes** (chosen by the admin): those groups, their students, tasks and results, and the same through `/api`. Other classes do not appear in lists or drop-downs, and opening one directly shows *Access Denied* or *Not Found*. A teacher with no classes sees nothing. Can reset the password of a student in their classes. |
 | Student | Only **My Page** (`/My`): their own profile, the tasks assigned to them and their own results. Teacher notes are not shown. Also shows their **parent code**. |
 | Parent  | Only **their own children** (`/Parent`): each child's tasks, results and the teacher's notes. Can message the teachers of a child's class under **Messages**. |
 

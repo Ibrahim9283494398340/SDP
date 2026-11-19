@@ -1,11 +1,11 @@
 @model OxuMen.Models.LoginRequest
 
 @{
+    Layout = "_AuthLayout";
     ViewData["Title"] = "Sign In";
 }
 
-<div class="row justify-content-center mt-4">
-    <div class="col-md-6 col-lg-4">
+<div class="ox-auth-form">
         <h1 class="h3 mb-4">Sign in to OxuMen</h1>
 
         <form asp-controller="Account"
@@ -57,7 +57,6 @@
         <p class="text-muted small">
             Students: forgot your password? Ask your teacher to reset it.
         </p>
-    </div>
 </div>
 
 @section Scripts {

@@ -1,29 +1,63 @@
-﻿
+﻿@model OxuMen.ViewModels.DashboardViewModel
+
 @{
-    ViewData["Title"] = "Müəllim Paneli";
+    ViewData["Title"] = Model.IsAdmin ? "İdarə Paneli" : "Müəllim Paneli";
 
-    // Demo values from the existing homepage.
-    // These are not yet connected to stored assessment data.
-    var students = new[]
-    {
-        new { Name = "Aylin M.", Speed = 62, Accuracy = 94, Comprehension = 7 },
-        new { Name = "Rashad A.", Speed = 48, Accuracy = 88, Comprehension = 6 },
-        new { Name = "Zahra K.", Speed = 71, Accuracy = 97, Comprehension = 8 },
-        new { Name = "Murad H.", Speed = 36, Accuracy = 82, Comprehension = 4 }
-    };
+    string Number(decimal? value, string suffix = "") =>
+        value.HasValue ? value.Value.ToString("0") + suffix : "—";
 
-    var averageAccuracy = students.Average(s => s.Accuracy);
-    var averageSpeed = students.Average(s => s.Speed);
+    var classesLabel = Model.Classes.Count == 0
+        ? "Sinif təyin edilməyib"
+        : string.Join(", ", Model.Classes);
+
+    // Data for the interactive panel at the bottom. It uses the latest
+    // result of each student in the teacher's own classes. When there are
+    // no results yet, the sample students are shown (clearly labelled) so
+    // the panel is never empty.
+    var usesSampleData = Model.RecentResults.Count == 0;
+
+    var interactiveStudents = usesSampleData
+        ? new List<object>
+        {
+            new { name = "Aylin M.", speed = (decimal?)62, accuracy = (decimal?)94, comprehension = (decimal?)70, url = (string?)null },
+            new { name = "Rashad A.", speed = (decimal?)48, accuracy = (decimal?)88, comprehension = (decimal?)60, url = (string?)null },
+            new { name = "Zahra K.", speed = (decimal?)71, accuracy = (decimal?)97, comprehension = (decimal?)80, url = (string?)null },
+            new { name = "Murad H.", speed = (decimal?)36, accuracy = (decimal?)82, comprehension = (decimal?)40, url = (string?)null }
+        }
+        : Model.RecentResults
+            .Select(row => (object)new
+            {
+                name = string.IsNullOrWhiteSpace(row.Name) ? "?" : row.Name,
+                speed = row.WordsPerMinute.HasValue ? Math.Round(row.WordsPerMinute.Value, 0, MidpointRounding.AwayFromZero) : (decimal?)null,
+                accuracy = row.Accuracy.HasValue ? Math.Round(row.Accuracy.Value, 0, MidpointRounding.AwayFromZero) : (decimal?)null,
+                comprehension = row.Comprehension,
+                url = Url.Action("Details", "AssessmentPages", new { id = row.AssessmentId })
+            })
+            .ToList();
+
+    var interactiveNames = usesSampleData
+        ? new List<string> { "Aylin M.", "Rashad A.", "Zahra K.", "Murad H." }
+        : Model.RecentResults
+            .Select(row => string.IsNullOrWhiteSpace(row.Name) ? "?" : row.Name)
+            .ToList();
 }
 
 <div class="ox-page-heading">
     <div>
-        <div class="ox-eyebrow">MÜƏLLİM PANELİ</div>
-        <h1>Xoş gəlmisiniz! 👋</h1>
+        <div class="ox-eyebrow">@(Model.IsAdmin ? "İDARƏ PANELİ" : "MÜƏLLİM PANELİ")</div>
+        <h1>Xoş gəlmisiniz, @Model.DisplayName! 👋</h1>
         <p>Şagirdlərinizin oxu bacarıqlarını izləyin və inkişafına dəstək olun.</p>
     </div>
-    <span class="ox-role-tag">👩‍🏫 Müəllim</span>
+    <span class="ox-role-tag">@(Model.IsAdmin ? "🛡️ Administrator" : "👩‍🏫 Müəllim")</span>
 </div>
+
+@if (!Model.IsAdmin && Model.Classes.Count == 0)
+{
+    <div class="alert alert-info">
+        Sizə hələ sinif təyin edilməyib. Siniflərinizi təyin etmək üçün
+        administratora müraciət edin.
+    </div>
+}
 
 <section class="ox-hero">
     <div class="ox-hero-text">
@@ -48,38 +82,38 @@
     <div class="ox-section-heading">
         <div>
             <span class="ox-eyebrow">ÜMUMİ GÖSTƏRİCİLƏR</span>
-            <h2>Sinifin nəticələri</h2>
+            <h2>Siniflərin nəticələri</h2>
         </div>
-        <span class="ox-pill">3-cü sinif · Nümunə məlumatlar</span>
+        <span class="ox-pill">@classesLabel</span>
     </div>
 
     <div class="ox-stats-grid">
         <article class="ox-stat-card">
             <div class="ox-stat-icon ox-blue">👥</div>
             <span>Şagird sayı</span>
-            <strong>@students.Length</strong>
-            <small>Sinifdəki şagirdlər</small>
+            <strong>@Model.StudentCount</strong>
+            <small>@Model.AssessedStudentCount nəfər qiymətləndirilib</small>
         </article>
 
         <article class="ox-stat-card">
             <div class="ox-stat-icon ox-green">📖</div>
             <span>Orta oxu sürəti</span>
-            <strong>@averageSpeed.ToString("0")</strong>
+            <strong>@Number(Model.AverageWordsPerMinute)</strong>
             <small>Söz / dəqiqə</small>
         </article>
 
         <article class="ox-stat-card">
             <div class="ox-stat-icon ox-purple">🎯</div>
             <span>Orta düzgünlük</span>
-            <strong>@averageAccuracy.ToString("0")%</strong>
+            <strong>@Number(Model.AverageAccuracy, "%")</strong>
             <small>Oxu dəqiqliyi</small>
         </article>
 
         <article class="ox-stat-card">
-            <div class="ox-stat-icon ox-orange">🏆</div>
-            <span>Sinif səviyyəsi</span>
-            <strong>3</strong>
-            <small>İbtidai təhsil</small>
+            <div class="ox-stat-icon ox-orange">📝</div>
+            <span>Tapşırıqlar</span>
+            <strong>@Model.TaskCount</strong>
+            <small>Qrup tapşırıqları</small>
         </article>
     </div>
 </section>
@@ -131,44 +165,76 @@
             </div>
         </div>
 
-        <div class="ox-table-scroll">
-            <table class="ox-table">
-                <thead>
-                    <tr>
-                        <th>Şagird</th>
-                        <th>Oxu sürəti</th>
-                        <th>Düzgünlük</th>
-                        <th>Anlama</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var student in students)
-                    {
+        @if (Model.RecentResults.Count == 0)
+        {
+            <p class="ox-data-note">
+                Hələ heç bir nəticə yoxdur. Şagirdi qiymətləndirdikdən sonra
+                son nəticələr burada görünəcək.
+            </p>
+        }
+        else
+        {
+            <div class="ox-table-scroll">
+                <table class="ox-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <span class="ox-table-avatar">
-                                    @student.Name.Substring(0, 1)
-                                </span>
-                                @student.Name
-                            </td>
-                            <td>@student.Speed söz/dəq</td>
-                            <td>
-                                <div class="ox-progress-value">@student.Accuracy%</div>
-                                <div class="ox-progress-track">
-                                    <div class="ox-progress-fill"
-                                         style="width: @(student.Accuracy)%"></div>
-                                </div>
-                            </td>
-                            <td>@student.Comprehension / 10</td>
+                            <th>Şagird</th>
+                            <th>Sinif</th>
+                            <th>Oxu sürəti</th>
+                            <th>Düzgünlük</th>
+                            <th>Anlama</th>
+                            <th>Tarix</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        <p class="ox-data-note">
-            Bu göstəricilər nümunə məlumatlardır.
-            Nəticələr müəllim tərəfindən qiymətləndirilməlidir.
-        </p>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.RecentResults)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="ox-table-link"
+                                       asp-controller="StudentPages"
+                                       asp-action="Details"
+                                       asp-route-id="@row.StudentId">
+                                        <span class="ox-table-avatar">
+                                            @(string.IsNullOrEmpty(row.Name) ? "?" : row.Name.Substring(0, 1))
+                                        </span>
+                                        @row.Name
+                                    </a>
+                                </td>
+                                <td>@row.ClassGroup</td>
+                                <td>@Number(row.WordsPerMinute, " söz/dəq")</td>
+                                <td>
+                                    @if (row.Accuracy is decimal accuracy)
+                                    {
+                                        <div class="ox-progress-value">@accuracy.ToString("0")%</div>
+                                        <div class="ox-progress-track">
+                                            <div class="ox-progress-fill"
+                                                 style="width: @(Math.Clamp(accuracy, 0, 100).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span>—</span>
+                                    }
+                                </td>
+                                <td>@Number(row.Comprehension, "%")</td>
+                                <td>
+                                    <a asp-controller="AssessmentPages"
+                                       asp-action="Details"
+                                       asp-route-id="@row.AssessmentId">
+                                        @row.AssessedAtUtc.ToLocalTime().ToString("dd.MM.yyyy")
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="ox-data-note">
+                Hər şagirdin son nəticəsi göstərilir.
+                Orta göstəricilər də son nəticələrə əsasən hesablanır.
+            </p>
+        }
     </section>
 
     <aside class="ox-panel ox-goals-panel">
@@ -208,3 +274,110 @@
         </div>
     </aside>
 </div>
+
+
+<!-- INTERACTIVE TEACHER DASHBOARD -->
+<section class="teacher-interactive" id="teacherAnalytics">
+
+    <div class="teacher-interactive-heading">
+        <div>
+            <h2>Şagirdlərin inkişaf paneli</h2>
+            <p>Şagird seçin və onun oxu nəticələrini izləyin.</p>
+        </div>
+        <span class="teacher-demo-label">
+            @(usesSampleData ? "Nümunə məlumatlar" : "Son nəticələr")
+        </span>
+    </div>
+
+    <div class="teacher-analytics-grid">
+
+        <div class="teacher-widget">
+            <h3>Şagirdlərim</h3>
+            <p>
+                @(usesSampleData
+                    ? "Hələ nəticə yoxdur, ona görə nümunə şagirdlər göstərilir."
+                    : "Ətraflı nəticələrə baxmaq üçün şagird seçin.")
+            </p>
+
+            <div class="teacher-student-list" id="teacherStudentList">
+                @for (var i = 0; i < interactiveNames.Count; i++)
+                {
+                    <button type="button"
+                            class="teacher-student-button @(i == 0 ? "selected" : "")"
+                            data-student="@i"
+                            aria-pressed="@(i == 0 ? "true" : "false")">
+                        @interactiveNames[i]
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="teacher-widget">
+            <h3 id="teacherSelectedName">@interactiveNames[0]</h3>
+
+            <div class="teacher-metric">
+                <span>Oxu sürəti</span>
+                <strong id="teacherSpeed">—</strong>
+                <div class="teacher-meter">
+                    <div class="teacher-meter-fill speed"
+                         id="teacherSpeedBar" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="teacher-metric">
+                <span>Düzgünlük</span>
+                <strong id="teacherAccuracy">—</strong>
+                <div class="teacher-meter">
+                    <div class="teacher-meter-fill accuracy"
+                         id="teacherAccuracyBar" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="teacher-metric">
+                <span>Anlama</span>
+                <strong id="teacherComprehension">—</strong>
+                <div class="teacher-meter">
+                    <div class="teacher-meter-fill comprehension"
+                         id="teacherComprehensionBar" style="width:0%"></div>
+                </div>
+            </div>
+
+            <a class="teacher-result-link" id="teacherResultLink" href="#" hidden>
+                Qiymətləndirməyə bax →
+            </a>
+        </div>
+    </div>
+
+    <div class="teacher-widget teacher-chart-widget">
+        <h3>Sinif üzrə müqayisə</h3>
+
+        <div class="teacher-chart-tabs">
+            <button type="button" class="teacher-chart-tab active"
+                    data-metric="speed" aria-pressed="true">
+                Oxu sürəti
+            </button>
+
+            <button type="button" class="teacher-chart-tab"
+                    data-metric="accuracy" aria-pressed="false">
+                Düzgünlük
+            </button>
+
+            <button type="button" class="teacher-chart-tab"
+                    data-metric="comprehension" aria-pressed="false">
+                Anlama
+            </button>
+        </div>
+
+        <div class="teacher-class-chart" id="teacherClassChart"></div>
+        <p id="teacherChartNote"></p>
+    </div>
+</section>
+
+<script type="application/json" id="teacherDashboardData">
+    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(interactiveStudents))
+</script>
+
+@section Scripts {
+    <script src="~/js/teacher-dashboard.js"
+            asp-append-version="true"></script>
+}

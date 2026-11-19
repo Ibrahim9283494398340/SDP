@@ -56,10 +56,12 @@
             <div class="ox-sidebar-caption">TƏHSİL PLATFORMASI</div>
 
             <nav class="ox-navigation" aria-label="Əsas menyu">
+                @* Teachers and admins get the dashboard; everyone else is sent
+                   to their own start page by Home/Start. *@
                 <a class="ox-nav-link @(controller == "Home" && (action == "Index" || action == "Start") ? "ox-active" : "")"
                    asp-area=""
                    asp-controller="Home"
-                   asp-action="Start">
+                   asp-action="@(isTeacher || isAdmin ? "Index" : "Start")">
                     <span>⌂</span> Ana səhifə
                 </a>
 

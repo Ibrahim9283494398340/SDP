@@ -35,6 +35,26 @@ public class EfReadingAssessmentRepository : IReadingAssessmentRepository
             .ToList();
     }
 
+    public async Task<List<ReadingAssessment>> GetForStudentsAsync(
+        IReadOnlyCollection<Guid> studentIds)
+    {
+        if (studentIds.Count == 0)
+        {
+            return new List<ReadingAssessment>();
+        }
+
+        var assessments = await _db.ReadingAssessments
+            .AsNoTracking()
+            .Where(assessment => studentIds.Contains(assessment.StudentId))
+            .ToListAsync();
+
+        // SQLite cannot sort DateTimeOffset columns in SQL, so sort here.
+        return assessments
+            .OrderByDescending(assessment => assessment.AssessedAtUtc)
+            .ThenByDescending(assessment => assessment.CreatedAtUtc)
+            .ToList();
+    }
+
     public async Task<ReadingAssessment> CreateAsync(
         ReadingAssessment assessment)
     {

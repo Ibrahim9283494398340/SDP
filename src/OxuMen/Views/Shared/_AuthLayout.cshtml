@@ -1,0 +1,56 @@
+@* Layout for the pages used before signing in (sign in, student and
+   parent sign-up). Same look as _Layout, but without the menu, which
+   only makes sense for a signed-in user. *@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OxuMən</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/oxuman-dashboard.css" asp-append-version="true" />
+</head>
+<body class="ox-body">
+    <div class="ox-auth-shell">
+        <aside class="ox-auth-brand" aria-hidden="true">
+            <div class="ox-logo">
+                <span class="ox-logo-icon">📖</span>
+                <span>OxuMən</span>
+            </div>
+
+            <div class="ox-sidebar-caption">TƏHSİL PLATFORMASI</div>
+
+            <div class="ox-auth-brand-text">
+                <span class="ox-auth-book">📚</span>
+                <h2>Hər şagirdin uğur hekayəsi burada başlayır!</h2>
+                <p>
+                    Oxu sürəti, düzgünlük və anlama bacarıqlarını
+                    bir yerdən izləyin.
+                </p>
+            </div>
+
+            <div class="ox-sidebar-footer">
+                © @DateTime.Now.Year OxuMən
+            </div>
+        </aside>
+
+        <main class="ox-auth-main" role="main">
+            <div class="ox-auth-logo-small">
+                <span class="ox-logo-icon">📖</span> OxuMən
+            </div>
+
+            <div class="ox-auth-card">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

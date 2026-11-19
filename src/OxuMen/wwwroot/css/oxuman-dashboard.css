@@ -412,3 +412,419 @@ body.ox-body {
 @media (max-width: 390px) {
     .ox-stats-grid { grid-template-columns: 1fr; }
 }
+
+/* ------------------------------------------------------------------
+   Shared look for the other pages (students, tasks, assessments,
+   admin, messages, parent and student pages). They use plain Bootstrap
+   markup; these rules give it the dashboard's style without changing
+   each view.
+   ------------------------------------------------------------------ */
+
+/* :where() keeps these weaker than the dashboard's own heading rules. */
+:where(.ox-content) h1 {
+    font-size: 28px;
+    font-weight: 900;
+}
+
+:where(.ox-content) :is(h2, h3, .h5) {
+    font-weight: 900;
+}
+
+.ox-content .text-muted { color: var(--ox-muted) !important; }
+
+.ox-content .card {
+    border: 1px solid var(--ox-border);
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(24, 56, 120, .06) !important;
+}
+
+.ox-content a.card {
+    transition: transform .15s, box-shadow .15s;
+}
+
+.ox-content a.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(24, 56, 120, .12) !important;
+}
+
+.ox-content .card .text-primary { color: var(--ox-blue) !important; }
+
+.ox-content .table {
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    font-size: 14px;
+    box-shadow: 0 6px 20px rgba(24, 56, 120, .06);
+}
+
+.ox-content .table > :not(caption) > * > * {
+    padding: 13px 14px;
+    border-bottom-color: #edf1f8;
+}
+
+.ox-content .table thead th {
+    color: #8b9ab1;
+    font-size: 12px;
+    font-weight: 900;
+    background: #f8faff;
+}
+
+.ox-content .btn {
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+.btn-primary {
+    background: var(--ox-blue);
+    border-color: var(--ox-blue);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: #164dbb;
+    border-color: #164dbb;
+}
+
+.ox-content .form-control,
+.ox-content .form-select,
+.ox-auth-card .form-control,
+.ox-auth-card .form-select {
+    border-radius: 12px;
+    border-color: #dbe3f3;
+    padding: 10px 14px;
+}
+
+.form-label { font-weight: 800; font-size: 14px; }
+
+.ox-content .alert { border-radius: 14px; border: none; }
+
+.ox-table-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.ox-table-link:hover { color: var(--ox-blue); }
+
+.ox-table a { color: var(--ox-blue); font-weight: 800; text-decoration: none; }
+.ox-table a.ox-table-link { color: inherit; font-weight: 900; }
+
+/* ------------------------------------------------------------------
+   Sign-in and sign-up pages (_AuthLayout).
+   ------------------------------------------------------------------ */
+
+.ox-auth-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.ox-auth-brand {
+    width: 40%;
+    max-width: 520px;
+    background: linear-gradient(180deg, #0b2455, #173e83);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 36px 24px;
+}
+
+.ox-auth-brand .ox-logo { pointer-events: none; }
+
+.ox-auth-brand-text {
+    margin: auto 0;
+}
+
+.ox-auth-book {
+    display: block;
+    font-size: 90px;
+    margin-bottom: 18px;
+}
+
+.ox-auth-brand-text h2 {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.25;
+}
+
+.ox-auth-brand-text p { color: #c3d5fa; }
+
+.ox-auth-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.ox-auth-logo-small {
+    display: none;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--ox-navy);
+    margin-bottom: 20px;
+}
+
+.ox-auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid var(--ox-border);
+    border-radius: 22px;
+    padding: 34px;
+    box-shadow: 0 12px 36px rgba(24, 56, 120, .08);
+}
+
+.ox-auth-card h1 { font-weight: 900; }
+.ox-auth-card .btn { border-radius: 12px; font-weight: 800; padding: 10px; }
+.ox-auth-card a { color: var(--ox-blue); font-weight: 800; }
+
+@media (max-width: 860px) {
+    .ox-auth-brand { display: none; }
+    .ox-auth-logo-small { display: block; }
+    .ox-auth-card { padding: 24px; }
+}
+
+
+
+/* INTERAKTİV MÜƏLLİM PANELİ */
+
+.teacher-interactive {
+    margin-top: 35px;
+    padding-bottom: 35px;
+}
+
+.teacher-interactive-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.teacher-interactive-heading h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #172d52;
+}
+
+.teacher-interactive-heading p {
+    color: #7c8ba5;
+    font-size: 14px;
+}
+
+.teacher-demo-label {
+    background: #e8efff;
+    color: #2864e8;
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.teacher-analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 20px;
+}
+
+.teacher-widget {
+    background: white;
+    padding: 25px;
+    border: 1px solid #e5ebf5;
+    border-radius: 18px;
+    box-shadow: 0 5px 20px rgba(30, 60, 120, 0.05);
+    min-width: 0;
+}
+
+.teacher-widget h3 {
+    color: #172d52;
+    font-size: 19px;
+    font-weight: 800;
+    margin-bottom: 15px;
+}
+
+.teacher-student-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.teacher-student-button {
+    background: #f3f7ff;
+    color: #284b83;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.teacher-student-button:hover {
+    background: #e4edff;
+}
+
+.teacher-student-button.selected {
+    background: #e8f0ff;
+    border-color: #3478f6;
+}
+
+.teacher-metric {
+    margin-bottom: 22px;
+}
+
+.teacher-metric span {
+    display: block;
+    margin-bottom: 6px;
+    color: #65758e;
+}
+
+.teacher-metric strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #172d52;
+    font-size: 17px;
+}
+
+.teacher-meter {
+    width: 100%;
+    height: 12px;
+    background: #edf1f9;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.teacher-meter-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.4s ease;
+}
+
+.teacher-meter-fill.speed {
+    background: #3979f5;
+}
+
+.teacher-meter-fill.accuracy {
+    background: #27bd8c;
+}
+
+.teacher-meter-fill.comprehension {
+    background: #9b6bea;
+}
+
+.teacher-chart-widget {
+    margin-top: 20px;
+}
+
+.teacher-chart-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.teacher-chart-tab {
+    background: #edf3ff;
+    color: #4770a5;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.teacher-chart-tab.active {
+    background: #2864e8;
+    color: white;
+}
+
+.teacher-class-chart {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: end;
+    gap: 16px;
+    min-height: 260px;
+    padding: 15px 10px;
+    border-bottom: 1px solid #e5eaf4;
+}
+
+.teacher-chart-column {
+    height: 230px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+}
+
+.teacher-chart-value {
+    color: #2856a3;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.teacher-chart-bar {
+    width: min(100%, 65px);
+    background: linear-gradient(180deg, #6da0ff, #2864e8);
+    border-radius: 10px 10px 0 0;
+    min-height: 4px;
+    transition: height 0.4s ease;
+}
+
+.teacher-chart-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #65758e;
+    text-align: center;
+}
+
+#teacherChartNote {
+    color: #7c8ba5;
+    font-size: 12px;
+    margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+    .teacher-analytics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .teacher-interactive-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .teacher-widget {
+        padding: 18px;
+    }
+
+    .teacher-class-chart {
+        gap: 8px;
+    }
+}
+
+
+
+.teacher-result-link {
+    display: inline-block;
+    margin-top: 6px;
+    color: #2864e8;
+    font-weight: 800;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.teacher-result-link:hover {
+    text-decoration: underline;
+}
+
+.teacher-result-link[hidden] {
+    display: none;
+}

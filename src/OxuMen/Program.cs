@@ -165,8 +165,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// "/" sends admins to the teacher list, teachers to their classes and
-// students to their own page.
+// "/" sends admins to the teacher list, teachers to their dashboard,
+// students to their own page and parents to their children.
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Start}/{id?}");
