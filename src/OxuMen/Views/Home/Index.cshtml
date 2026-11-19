@@ -134,34 +134,34 @@
         <div class="ox-table-scroll">
             <table class="ox-table">
                 <thead>
-                    <tr>
-                        <th>Şagird</th>
-                        <th>Oxu sürəti</th>
-                        <th>Düzgünlük</th>
-                        <th>Anlama</th>
-                    </tr>
+                <tr>
+                    <th>Şagird</th>
+                    <th>Oxu sürəti</th>
+                    <th>Düzgünlük</th>
+                    <th>Anlama</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var student in students)
-                    {
-                        <tr>
-                            <td>
-                                <span class="ox-table-avatar">
-                                    @student.Name.Substring(0, 1)
-                                </span>
-                                @student.Name
-                            </td>
-                            <td>@student.Speed söz/dəq</td>
-                            <td>
-                                <div class="ox-progress-value">@student.Accuracy%</div>
-                                <div class="ox-progress-track">
-                                    <div class="ox-progress-fill"
-                                         style="width: @(student.Accuracy)%"></div>
-                                </div>
-                            </td>
-                            <td>@student.Comprehension / 10</td>
-                        </tr>
-                    }
+                @foreach (var student in students)
+                {
+                    <tr>
+                        <td>
+                            <span class="ox-table-avatar">
+                                @student.Name.Substring(0, 1)
+                            </span>
+                            @student.Name
+                        </td>
+                        <td>@student.Speed söz/dəq</td>
+                        <td>
+                            <div class="ox-progress-value">@student.Accuracy%</div>
+                            <div class="ox-progress-track">
+                                <div class="ox-progress-fill"
+                                     style="width: @(student.Accuracy)%"></div>
+                            </div>
+                        </td>
+                        <td>@student.Comprehension / 10</td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
@@ -175,6 +175,7 @@
         <span class="ox-eyebrow">ÖYRƏNMƏ YOLU</span>
         <h2>İnkişaf addımları</h2>
 
+   
         <div class="ox-goal-item">
             <span class="ox-goal-number">1</span>
             <div>
@@ -182,6 +183,7 @@
                 <p>Şagird haqqında məlumat yaradın.</p>
             </div>
         </div>
+
 
         <div class="ox-goal-item">
             <span class="ox-goal-number">2</span>
@@ -208,3 +210,105 @@
         </div>
     </aside>
 </div>
+
+
+<!-- INTERACTIVE TEACHER DASHBOARD -->
+<section class="teacher-interactive" id="teacherAnalytics">
+
+    <div class="teacher-interactive-heading">
+        <div>
+            <h2>Şagirdlərin inkişaf paneli</h2>
+            <p>Şagird seçin və onun oxu nəticələrini izləyin.</p>
+        </div>
+        <span class="teacher-demo-label">Nümunə məlumatlar</span>
+    </div>
+
+    <div class="teacher-analytics-grid">
+
+        <div class="teacher-widget">
+            <h3>Şagirdlərim</h3>
+            <p>Ətraflı nəticələrə baxmaq üçün şagird seçin.</p>
+
+            <div class="teacher-student-list" id="teacherStudentList">
+                <button type="button" class="teacher-student-button selected"
+                        data-student="0" aria-pressed="true">
+                    Aylin M.
+                </button>
+
+                <button type="button" class="teacher-student-button"
+                        data-student="1" aria-pressed="false">
+                    Rashad A.
+                </button>
+
+                <button type="button" class="teacher-student-button"
+                        data-student="2" aria-pressed="false">
+                    Zahra K.
+                </button>
+
+                <button type="button" class="teacher-student-button"
+                        data-student="3" aria-pressed="false">
+                    Murad H.
+                </button>
+            </div>
+        </div>
+
+        <div class="teacher-widget">
+            <h3 id="teacherSelectedName">Aylin M.</h3>
+
+            <div class="teacher-metric">
+                <span>Oxu sürəti</span>
+                <strong id="teacherSpeed">62 söz/dəq</strong>
+                <div class="teacher-meter">
+                    <div class="teacher-meter-fill speed"
+                         id="teacherSpeedBar" style="width:62%"></div>
+                </div>
+            </div>
+
+            <div class="teacher-metric">
+                <span>Düzgünlük</span>
+                <strong id="teacherAccuracy">94%</strong>
+                <div class="teacher-meter">
+                    <div class="teacher-meter-fill accuracy"
+                         id="teacherAccuracyBar" style="width:94%"></div>
+                </div>
+            </div>
+
+            <div class="teacher-metric">
+                <span>Anlama</span>
+                <strong id="teacherComprehension">7/10</strong>
+                <div class="teacher-meter">
+                    <div class="teacher-meter-fill comprehension"
+                         id="teacherComprehensionBar" style="width:70%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="teacher-widget teacher-chart-widget">
+        <h3>Sinif üzrə müqayisə</h3>
+
+        <div class="teacher-chart-tabs">
+            <button type="button" class="teacher-chart-tab active"
+                    data-metric="speed" aria-pressed="true">
+                Oxu sürəti
+            </button>
+
+            <button type="button" class="teacher-chart-tab"
+                    data-metric="accuracy" aria-pressed="false">
+                Düzgünlük
+            </button>
+
+            <button type="button" class="teacher-chart-tab"
+                    data-metric="comprehension" aria-pressed="false">
+                Anlama
+            </button>
+        </div>
+
+        <div class="teacher-class-chart" id="teacherClassChart"></div>
+        <p id="teacherChartNote"></p>
+    </div>
+</section>
+@section Scripts {
+    <script src="~/js/teacher-dashboard.js"
+            asp-append-version="true"></script>
+}
